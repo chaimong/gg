@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CDA-GDINA Analyzer Pro — M₂ / RMSEA₂ & Cross-Validation</title>
+<style>
+:root{--tx:#334155;--lb:#1e293b;--mut:#64748b;--ok:#059669;--ok-l:#d1fae5;--er:#e11d48;--er-l:#ffe4e6;--wn:#d97706;--wn-l:#fef3c7;--acc:#7c3aed;--acc-l:#ede9fe;--grid:#e2e8f0;--bl:#0284c7;--bl-l:#e0f2fe;--tl:#0d9488;--tl-l:#ccfbf1}
+*{box-sizing:border-box}
+body{font-family:'Sarabun','Segoe UI',Tahoma,sans-serif;color:var(--tx);background:#f8fafc;padding:20px;line-height:1.6;margin:0}
+.wrap{max-width:1300px;margin:0 auto}
+.card{background:#fff;padding:22px;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:20px}
+h2{color:var(--acc);margin:0 0 4px}h3{color:var(--lb);margin:0 0 12px;font-size:17px}
+h4{color:var(--lb);margin:18px 0 8px;font-size:14.5px}
+.sub{color:var(--mut);font-size:13px;margin:0 0 16px}
+button{background:var(--acc);color:#fff;border:0;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-family:inherit;font-size:14px}
+button:hover{background:#6d28d9}button:disabled{background:#cbd5e1;cursor:not-allowed}
+button.gh{background:#fff;color:var(--acc);border:1.5px solid var(--acc)}
+button.gh:hover{background:var(--acc-l)}button.sm{padding:7px 13px;font-size:12.5px}
+button.wn{background:var(--wn)}button.wn:hover{background:#b45309}
+button.bl{background:var(--bl)}button.bl:hover{background:#0369a1}
+select,input[type=number]{padding:8px 10px;border:1.5px solid var(--grid);border-radius:8px;font-family:inherit;font-size:14px;color:var(--tx);background:#fff}
+select{min-width:158px}input[type=number]{width:92px}
+label{display:block;font-size:12px;font-weight:700;color:var(--lb);margin-bottom:4px}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--lb);padding-bottom:9px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:end}
+.drop{border:2px dashed #cbd5e1;border-radius:12px;padding:18px;text-align:center;background:#fcfcfd;cursor:pointer;transition:.15s}
+.drop:hover{border-color:var(--acc);background:var(--acc-l)}.drop.ok{border-color:var(--ok);background:var(--ok-l)}
+.drop b{display:block;color:var(--lb);font-size:14px}.drop span{font-size:12px;color:var(--mut)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.g2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+th,td{padding:8px 7px;border-bottom:1px solid var(--grid);text-align:center}
+th{background:#f8fafc;color:var(--lb);font-size:12px;font-weight:800;position:sticky;top:0;z-index:1}
+tr.sum{background:#f1f5f9;font-weight:800}tr.hl{background:#fff7ed}tr.best{background:#ecfdf5}
+.tag{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:800;display:inline-block}
+.t-ok{background:var(--ok-l);color:var(--ok)}.t-er{background:var(--er-l);color:var(--er)}
+.t-wn{background:var(--wn-l);color:var(--wn)}.t-ac{background:var(--acc-l);color:var(--acc)}
+.t-bl{background:var(--bl-l);color:var(--bl)}.t-tl{background:var(--tl-l);color:var(--tl)}
+.msg{padding:12px 14px;border-radius:10px;font-size:13.5px;margin-bottom:10px}
+.m-ok{background:var(--ok-l);color:#065f46}.m-wn{background:var(--wn-l);color:#92400e}
+.m-er{background:var(--er-l);color:#9f1239}.m-bl{background:var(--bl-l);color:#075985}
+.m-tl{background:var(--tl-l);color:#115e59}
+.scroll{overflow:auto;max-height:470px;border:1px solid var(--grid);border-radius:10px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin-bottom:14px}
+.kpi div{background:#f8fafc;border:1px solid var(--grid);border-radius:10px;padding:11px;text-align:center}
+.kpi b{display:block;font-size:21px;color:var(--acc);line-height:1.25}
+.kpi span{font-size:11px;color:var(--mut);font-weight:700}
+canvas{width:100%;display:block}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;border-bottom:2px solid var(--grid);margin-bottom:16px}
+.tabs button{background:transparent;color:var(--mut);border:0;border-bottom:3px solid transparent;border-radius:0;padding:9px 11px;font-size:13px}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.tabs button:hover{background:#f8fafc;color:var(--acc)}
+.mono{font-family:ui-monospace,'Cascadia Code',Consolas,monospace;font-size:12px;letter-spacing:1.6px}
+.se{color:var(--mut);font-size:11px;font-weight:600}
+.badge{display:inline-block;background:var(--wn-l);color:#92400e;border:1px solid #fcd34d;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-left:8px}
+.badge.b2{background:var(--bl-l);color:#075985;border-color:#7dd3fc}
+.bar{height:10px;background:var(--grid);border-radius:6px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .2s}
+footer{text-align:center;padding:34px;color:var(--mut);font-size:13px;border-top:1px solid var(--grid);margin-top:30px}
+.hide{display:none}
+.note{font-size:12px;color:var(--mut);line-height:1.6;margin-top:6px}
+.sep{height:1px;background:var(--grid);margin:18px 0}
+.cellf{display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;font-size:11px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="card">
+  <h2>CDA-GDINA Analyzer Pro
+    <span id="qBadge" class="badge hide">Q-Matrix ถูกปรับแล้ว</span>
+    <span id="mBadge" class="badge b2 hide">ใช้โมเดลรายข้อแบบผสม</span></h2>
+  <p class="sub">MML-EM · Higher-Order G-DINA · Iterative Q-Validation · Wald Test · Absolute Fit · Parametric Bootstrap · M₂ / RMSEA₂ · Cross-Validation</p>
+
+  <div class="g2">
+    <div>
+      <div class="drop" id="dropR" onclick="document.getElementById('fR').click()">
+        <b>📄 Response Matrix (.csv)</b><span>แถว = ผู้เข้าสอบ · คอลัมน์ = ข้อสอบ (0/1)</span>
+        <div id="infoR" style="margin-top:7px;font-size:12px;color:var(--mut)">ยังไม่ได้เลือกไฟล์</div>
+      </div>
+      <input type="file" id="fR" accept=".csv,.txt" class="hide" onchange="loadFile(this,'R')">
+    </div>
+    <div>
+      <div class="drop" id="dropQ" onclick="document.getElementById('fQ').click()">
+        <b>🧩 Q-Matrix (.csv)</b><span>แถว = ข้อสอบ · คอลัมน์ = มิติความสามารถ (0/1)</span>
+        <div id="infoQ" style="margin-top:7px;font-size:12px;color:var(--mut)">ยังไม่ได้เลือกไฟล์</div>
+      </div>
+      <input type="file" id="fQ" accept=".csv,.txt" class="hide" onchange="loadFile(this,'Q')">
+    </div>
+  </div>
+
+  <h4>⚙️ โมเดล IRT ต่อเนื่อง (Scale Score)</h4>
+  <div class="row">
+    <div><label>Calibrate ข้อสอบ</label>
+      <select id="optCal"><option value="EM">MML-EM (Bock–Aitkin)</option><option value="HEUR">Heuristic</option></select></div>
+    <div><label>โมเดลข้อสอบ</label>
+      <select id="optModel"><option value="2PL">2PL (a, b)</option><option value="RASCH">Rasch / 1PL</option></select></div>
+    <div><label>ประมาณ θ</label>
+      <select id="optEst"><option value="EAP">EAP</option><option value="MLE">MLE</option></select></div>
+    <div><label>จุดตัด θ</label><input type="number" id="optCut" value="0" step="0.1"></div>
+    <div><label>รอบสูงสุด (EM)</label><input type="number" id="optIt" value="300" step="50" min="20"></div>
+  </div>
+
+  <h4>🧠 โมเดล G-DINA (Latent Class)</h4>
+  <div class="row">
+    <div class="chk"><input type="checkbox" id="optGD" checked><span>เปิดใช้งาน G-DINA</span></div>
+    <div><label>ฟังก์ชันเชื่อมโยงตั้งต้น</label>
+      <select id="optGDM" onchange="clearMixed()"><option value="GDINA">G-DINA (Saturated)</option>
+      <option value="DINA">DINA</option><option value="DINO">DINO</option><option value="ACDM">ACDM</option></select></div>
+    <div><label>โครงสร้างคลาสแฝง</label>
+      <select id="optStruc"><option value="HO">Higher-Order (2K)</option><option value="SAT">Saturated (2^K − 1)</option></select></div>
+    <div class="chk"><input type="checkbox" id="optMono" checked><span>บังคับ Monotonicity</span></div>
+    <div><label>เกณฑ์ P(mastery) ≥</label><input type="number" id="optThr" value="0.70" step="0.05" min="0.5" max="0.99"></div>
+  </div>
+
+  <h4>🔍 Q-Matrix และการเลือกโมเดลรายข้อ</h4>
+  <div class="row">
+    <div class="chk"><input type="checkbox" id="optQV" checked><span>GDI / PVAF</span></div>
+    <div class="chk"><input type="checkbox" id="optIter" checked><span>วนซ้ำจนผลนิ่ง</span></div>
+    <div><label>ค่าตัด PVAF (ε)</label><input type="number" id="optEps" value="0.95" step="0.01" min="0.5" max="0.999"></div>
+    <div><label>รอบสูงสุด (Q)</label><input type="number" id="optQR" value="10" step="1" min="2" max="40"></div>
+    <div><label>เกณฑ์เลือกรอบ</label>
+      <select id="optPick"><option value="BIC">BIC ต่ำสุด</option><option value="AIC">AIC ต่ำสุด</option><option value="LAST">รอบสุดท้าย</option></select></div>
+    <div class="chk"><input type="checkbox" id="optWald" checked><span>Wald Test รายข้อ</span></div>
+    <div><label>α</label><select id="optAlpha"><option value="0.05">0.05</option><option value="0.01">0.01</option><option value="0.10">0.10</option></select></div>
+    <div class="chk"><input type="checkbox" id="optBH"><span>ปรับ p ด้วย BH</span></div>
+    <div class="chk"><input type="checkbox" id="optAutoW"><span>ใช้โมเดลที่เลือกทันที</span></div>
+  </div>
+
+  <h4>🎯 ความกลมกลืนสัมบูรณ์ · M₂ · Bootstrap</h4>
+  <div class="row">
+    <div class="chk"><input type="checkbox" id="optAF" checked><span>SRMSR / MADcor / max χ²</span></div>
+    <div class="chk"><input type="checkbox" id="optM2" checked><span>M₂ · RMSEA₂ · CFI₂ / TLI₂</span></div>
+    <div class="chk"><input type="checkbox" id="optBoot"><span>Parametric Bootstrap</span></div>
+    <div><label>จำนวนรอบ (B)</label>
+      <select id="optB"><option value="50">50 (เร็ว)</option><option value="100" selected>100 (มาตรฐาน)</option>
+      <option value="200">200 (ละเอียด)</option><option value="500">500 (ตีพิมพ์)</option></select></div>
+    <div><label>วิธี Bootstrap</label>
+      <select id="optBM"><option value="REFIT">Refit ทุกรอบ</option><option value="FIXED">ตรึงพารามิเตอร์</option></select></div>
+    <div><label>รอบ EM ต่อ replicate</label><input type="number" id="optBIt" value="120" step="20" min="20" max="600"></div>
+  </div>
+
+  <h4>🔀 โหมดแบ่งข้อมูล Calibration / Validation</h4>
+  <div class="row">
+    <div class="chk"><input type="checkbox" id="optCV"><span>เปิดใช้งาน Cross-Validation</span></div>
+    <div><label>รูปแบบการแบ่ง</label>
+      <select id="optCVM" onchange="cvModeUI()">
+        <option value="KFOLD">k-fold Cross-Validation</option>
+        <option value="HOLDOUT">Holdout (แบ่งครั้งเดียว)</option>
+        <option value="REPEAT">Repeated Holdout</option></select></div>
+    <div id="wrapK"><label>จำนวน fold (k)</label>
+      <select id="optK"><option value="2">2</option><option value="5" selected>5</option><option value="10">10</option></select></div>
+    <div id="wrapP" class="hide"><label>สัดส่วน calibration</label>
+      <input type="number" id="optProp" value="0.70" step="0.05" min="0.4" max="0.9"></div>
+    <div id="wrapR" class="hide"><label>จำนวนครั้งที่ทำซ้ำ</label>
+      <input type="number" id="optRep" value="10" step="1" min="2" max="50"></div>
+    <div class="chk"><input type="checkbox" id="optResel" checked><span>เลือก Q + โมเดลใหม่ในทุก fold</span></div>
+    <div><label>รอบ EM ต่อ fold</label><input type="number" id="optCVIt" value="150" step="25" min="30" max="600"></div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <div><label>Random seed</label><input type="number" id="optSeed" value="20260901" step="1"></div>
+    <button id="btnRun" onclick="runAnalysis()" disabled>▶ เริ่มวิเคราะห์</button>
+    <button class="gh sm" onclick="genSampleR()">⬇ ตัวอย่าง Response</button>
+    <button class="gh sm" onclick="genSampleQ()">⬇ ตัวอย่าง Q-Matrix</button>
+    <button class="gh sm" onclick="genSampleQbad()">⬇ ตัวอย่าง Q ที่ระบุผิด</button>
+  </div>
+  <div id="loadMsg" style="margin-top:12px"></div>
+  <div id="prog" class="hide" style="margin-top:10px">
+    <div class="msg m-bl" style="margin-bottom:6px">
+      <b id="progTitle">⏳ กำลังประมวลผล</b> — <span id="progTxt">เตรียมข้อมูล…</span>
+      <div class="bar"><i id="progBar"></i></div>
+    </div>
+  </div>
+</div>
+
+<div class="card hide" id="pnlMain">
+  <div class="tabs">
+    <button id="tb-g" class="on" onclick="tab('g')">📈 ภาพรวมกลุ่ม</button>
+    <button id="tb-i" onclick="tab('i')">🔧 พารามิเตอร์ข้อสอบ</button>
+    <button id="tb-d" onclick="tab('d')">🧠 G-DINA</button>
+    <button id="tb-q" onclick="tab('q')">🔍 Q-Matrix</button>
+    <button id="tb-w" onclick="tab('w')">⚖️ Wald Test</button>
+    <button id="tb-f" onclick="tab('f')">🎯 ความกลมกลืนสัมบูรณ์</button>
+    <button id="tb-m" onclick="tab('m')">📐 M₂ / RMSEA₂</button>
+    <button id="tb-c" onclick="tab('c')">🔀 Cross-Validation</button>
+    <button id="tb-s" onclick="tab('s')">🧭 รายบุคคล</button>
+  </div>
+
+  <div id="pg-g">
+    <div id="kpiG" class="kpi"></div>
+    <canvas id="cvHist" height="250"></canvas>
+    <h4>ค่าสถิติความกลมกลืนของโมเดล</h4>
+    <div id="fitTbl"></div>
+    <div id="emLog" class="note"></div>
+  </div>
+
+  <div id="pg-i" class="hide">
+    <h3>พารามิเตอร์ข้อสอบจากการ Calibrate</h3>
+    <div class="scroll"><div id="itemTbl"></div></div>
+    <div class="note" id="itemNote"></div>
+  </div>
+
+  <div id="pg-d" class="hide"><div id="gdWrap"></div></div>
+  <div id="pg-q" class="hide"><div id="qvWrap"></div></div>
+  <div id="pg-w" class="hide"><div id="wdWrap"></div></div>
+  <div id="pg-f" class="hide"><div id="afWrap"></div></div>
+  <div id="pg-m" class="hide"><div id="m2Wrap"></div></div>
+  <div id="pg-c" class="hide"><div id="cvWrap"></div></div>
+
+  <div id="pg-s" class="hide">
+    <div class="row" style="margin-bottom:14px">
+      <div style="flex:1;min-width:250px"><label>เลือกผู้เข้าสอบ</label>
+        <select id="stuSel" style="width:100%" onchange="renderDiag()"></select></div>
+      <button class="gh" onclick="printReport()">🖨 พิมพ์รายงานรายบุคคล</button>
+      <button class="gh" onclick="exportCSV()">⬇ ส่งออกผลทั้งหมด (CSV)</button>
+    </div>
+    <div id="kpiS" class="kpi"></div>
+    <div id="alertS"></div>
+    <h4>📊 โปรไฟล์ความสามารถหลายมิติ</h4>
+    <canvas id="cvAbility" height="380"></canvas>
+    <h4>🧠 ความน่าจะเป็นของการรอบรู้จาก G-DINA</h4>
+    <canvas id="cvMastery" height="250"></canvas>
+    <div class="scroll"><div id="abilityProfile"></div></div>
+  </div>
+</div>
+
+<footer>© 2026 | Developed by ดร.ชัยมงคล ปินะสา คณะครุศาสตร์ มหาวิทยาลัยราชภัฏเลย | All rights reserved.</footer>
+</div>
+
+<script>
+/* ==========================================================
+   STATE
+========================================================== */
+var S={attrNames:[],itemNames:[],students:[],ids:[],Q:null,X:null,ip:[],
+  threshold:.70,cut:0,est:'EAP',model:'2PL',cal:'EM',struc:'HO',eps:.95,alpha:.05,
+  raw:{R:null,Q:null},em:null,gd:null,qv:null,qvHist:null,wald:null,af:null,boot:null,
+  m2:null,cv:null,Qapplied:null,Qorig:null,linkOf:null,linkUsed:'GDINA',mono:true,maxIt:300,cfg:{}};
+
+/* ==========================================================
+   RNG
+========================================================== */
+var RNG=(function(){var s=123456789;
+  return{seed:function(v){s=(v>>>0)||123456789;},
+    next:function(){s|=0;s=s+0x6D2B79F5|0;var t=Math.imul(s^s>>>15,1|s);
+      t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;}};})();
+function rnd(){return RNG.next();}
+function gaussR(){var u=1-rnd(),v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function shuffled(n){var a=[];for(var i=0;i<n;i++)a.push(i);
+  for(var j=n-1;j>0;j--){var k=Math.floor(rnd()*(j+1)),t=a[j];a[j]=a[k];a[k]=t;}return a;}
+
+/* ==========================================================
+   MATH
+========================================================== */
+function normPdf(z){return Math.exp(-.5*z*z)/Math.sqrt(2*Math.PI);}
+function normCdf(z){var t=1/(1+.2316419*Math.abs(z)),d=normPdf(z),
+  p=d*t*(.319381530+t*(-.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));return z>0?1-p:p;}
+function normInv(p){if(p<=0)return -6;if(p>=1)return 6;
+  var a=[-3.969683028665376e1,2.209460984245205e2,-2.759285104469687e2,1.383577518672690e2,-3.066479806614716e1,2.506628277459239],
+      b=[-5.447609879822406e1,1.615858368580409e2,-1.556989798598866e2,6.680131188771972e1,-1.328068155288572e1],
+      c=[-7.784894002430293e-3,-3.223964580411365e-1,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783],
+      d=[7.784695709041462e-3,3.224671290700398e-1,2.445134137142996,3.754408661907416],pl=.02425,q,r;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  q=p-.5;r=q*q;
+  return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function mean(a){var v=a.filter(isFinite);return v.length?v.reduce(function(x,y){return x+y;},0)/v.length:NaN;}
+function sd(a){var v=a.filter(isFinite);if(v.length<2)return NaN;var m=mean(v);
+  return Math.sqrt(v.reduce(function(s,x){return s+(x-m)*(x-m);},0)/(v.length-1));}
+function quantile(a,q){var v=a.filter(isFinite).slice().sort(function(x,y){return x-y;});
+  if(!v.length)return NaN;var i=(v.length-1)*q,lo=Math.floor(i),hi=Math.ceil(i);
+  return v[lo]+(v[hi]-v[lo])*(i-lo);}
+function popcount(n){var c=0;while(n){c+=n&1;n>>=1;}return c;}
+function qstr(mask,K){var s=[];for(var k=0;k<K;k++)s.push((mask>>k)&1);return s.join(' ');}
+function maskOf(row){var m=0;for(var k=0;k<row.length;k++)if(row[k]===1)m|=(1<<k);return m;}
+function cloneQ(Q){return Q.map(function(r){return r.slice();});}
+function keyQ(Q){return Q.map(function(r){return r.join('');}).join('|');}
+function solveLS(A,b){var m=b.length,M=A.map(function(r,i){return r.slice().concat([b[i]]);});
+  for(var c=0;c<m;c++){var pv=c;for(var r=c+1;r<m;r++)if(Math.abs(M[r][c])>Math.abs(M[pv][c]))pv=r;
+    if(Math.abs(M[pv][c])<1e-11)return null;var t=M[c];M[c]=M[pv];M[pv]=t;
+    for(var r2=0;r2<m;r2++){if(r2===c)continue;var f=M[r2][c]/M[c][c];
+      for(var c2=c;c2<=m;c2++)M[r2][c2]-=f*M[c][c2];}}
+  return M.map(function(r,i){return r[m]/M[i][i];});}
+function quadForm(A,v){
+  var n=v.length,M=A.map(function(r,i){return r.slice().concat([v[i]]);});
+  for(var c=0;c<n;c++){var pv=c;for(var r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[pv][c]))pv=r;
+    if(Math.abs(M[pv][c])<1e-13)return NaN;var t=M[c];M[c]=M[pv];M[pv]=t;
+    for(var r2=0;r2<n;r2++){if(r2===c)continue;var f=M[r2][c]/M[c][c];
+      for(var c2=c;c2<=n;c2++)M[r2][c2]-=f*M[c][c2];}}
+  var s=0;for(var i=0;i<n;i++)s+=v[i]*(M[i][n]/M[i][i]);return s;}
+/* --- LU factorization (flat array) --- */
+function luFactor(A,n){
+  var piv=new Int32Array(n);
+  for(var k=0;k<n;k++){
+    var mx=0,pr=k;
+    for(var i=k;i<n;i++){var v=Math.abs(A[i*n+k]);if(v>mx){mx=v;pr=i;}}
+    if(mx<1e-13)return null;piv[k]=pr;
+    if(pr!==k)for(var j=0;j<n;j++){var t=A[k*n+j];A[k*n+j]=A[pr*n+j];A[pr*n+j]=t;}
+    var d=A[k*n+k];
+    for(var i2=k+1;i2<n;i2++){var f=A[i2*n+k]/d;A[i2*n+k]=f;
+      if(f!==0)for(var j2=k+1;j2<n;j2++)A[i2*n+j2]-=f*A[k*n+j2];}}
+  return piv;}
+function luSolve(A,piv,n,b){
+  for(var k=0;k<n;k++){var p=piv[k];if(p!==k){var t=b[k];b[k]=b[p];b[p]=t;}
+    for(var i=k+1;i<n;i++)b[i]-=A[i*n+k]*b[k];}
+  for(var k2=n-1;k2>=0;k2--){
+    for(var j=k2+1;j<n;j++)b[k2]-=A[k2*n+j]*b[j];
+    b[k2]/=A[k2*n+k2];}
+  return b;}
+/* --- chi-square & noncentral chi-square --- */
+function gammln(x){var c=[76.18009172947146,-86.50532032941677,24.01409824083091,
+  -1.231739572450155,.1208650973866179e-2,-.5395239384953e-5],y=x,t=x+5.5,s=1.000000000190015;
+  t-=(x+.5)*Math.log(t);for(var j=0;j<6;j++)s+=c[j]/(++y);return -t+Math.log(2.5066282746310005*s/x);}
+function gser(a,x){var ap=a,sum=1/a,del=sum;
+  for(var n=1;n<=800;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-14)break;}
+  return sum*Math.exp(-x+a*Math.log(x)-gammln(a));}
+function gcf(a,x){var FP=1e-300,b=x+1-a,c=1/FP,d=1/b,h=d;
+  for(var i=1;i<=800;i++){var an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<FP)d=FP;
+    c=b+an/c;if(Math.abs(c)<FP)c=FP;d=1/d;var del=d*c;h*=del;if(Math.abs(del-1)<1e-14)break;}
+  return Math.exp(-x+a*Math.log(x)-gammln(a))*h;}
+function chisqP(W,df){if(!isFinite(W)||W<=0||df<=0)return 1;
+  var a=df/2,x=W/2;return x<a+1?1-gser(a,x):gcf(a,x);}
+function chisqCdf(x,df){return 1-chisqP(x,df);}
+/* F(x; df, lam) ของไคสแควร์นอกศูนย์กลาง */
+function ncChisqCdf(x,df,lam){
+  if(!(x>0))return 0;
+  if(!(lam>1e-9))return chisqCdf(x,df);
+  var lh=lam/2,i0=Math.max(0,Math.floor(lh)),sum=0;
+  function lw(i){return -lh+i*Math.log(lh)-gammln(i+1);}
+  for(var i=i0;i<i0+5000;i++){var w=Math.exp(lw(i));
+    if(w<1e-16&&i>lh)break;sum+=w*chisqCdf(x,df+2*i);}
+  for(var j=i0-1;j>=0;j--){var w2=Math.exp(lw(j));
+    if(w2<1e-16)break;sum+=w2*chisqCdf(x,df+2*j);}
+  return clamp(sum,0,1);}
+function findLambda(x,df,target){
+  if(ncChisqCdf(x,df,0)<=target)return 0;
+  var lo=0,hi=Math.max(x,df)*4+50;
+  var guard=0;
+  while(ncChisqCdf(x,df,hi)>target&&hi<1e8&&guard++<60)hi*=2;
+  for(var i=0;i<160;i++){var m=(lo+hi)/2;
+    if(ncChisqCdf(x,df,m)>target)lo=m;else hi=m;}
+  return (lo+hi)/2;}
+function bhAdjust(ps){
+  var idx=ps.map(function(p,i){return{p:p,i:i};}).filter(function(o){return isFinite(o.p);});
+  idx.sort(function(a,b){return a.p-b.p;});
+  var m=idx.length,out=ps.slice(),prev=1;
+  for(var r=m-1;r>=0;r--){var v=Math.min(prev,idx[r].p*m/(r+1));prev=v;out[idx[r].i]=v;}
+  return out;}
+
+/* ==========================================================
+   SCALE SCORE
+========================================================== */
+var SS={M:50,SD:10,LO:20,HI:80,
+  calc:function(t){var v=Number(t);return isFinite(v)?clamp(SS.M+SS.SD*v,SS.LO,SS.HI):null;},
+  fmt:function(t,d){var v=SS.calc(t);return v===null?'–':v.toFixed(d==null?1:d);},
+  se:function(s){var x=Number(s);return isFinite(x)&&x>0?SS.SD*x:null;},
+  ci:function(t,s){var v=SS.calc(t),e=SS.se(s);if(v===null||e===null)return null;
+    return [clamp(v-1.96*e,SS.LO,SS.HI),clamp(v+1.96*e,SS.LO,SS.HI)];},
+  band:function(t){var v=SS.calc(t);
+    if(v===null)return{label:'ไม่ระบุ',color:'#94a3b8'};
+    if(v>=60)return{label:'สูง',color:'#059669'};
+    if(v>=45)return{label:'ปานกลาง',color:'#d97706'};
+    return{label:'ต้องพัฒนา',color:'#e11d48'};}};
+
+/* ==========================================================
+   CSV / LOAD
+========================================================== */
+function parseCSV(txt){
+  txt=txt.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');
+  var lines=txt.split('\n').filter(function(l){return l.trim()!=='';});
+  if(!lines.length)throw new Error('ไฟล์ว่างเปล่า');
+  var best=',',bn=0;[',',';','\t','|'].forEach(function(d){var n=lines[0].split(d).length;if(n>bn){bn=n;best=d;}});
+  return lines.map(function(l){var out=[],cur='',q=false;
+    for(var i=0;i<l.length;i++){var ch=l[i];
+      if(q){if(ch==='"'){if(l[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+      else{if(ch==='"')q=true;else if(ch===best){out.push(cur.trim());cur='';}else cur+=ch;}}
+    out.push(cur.trim());return out;});}
+function isBin(v){return v==='0'||v==='1';}
+function looksHeader(r){return r.some(function(c){return c!==''&&!isFinite(Number(c));});}
+function looksIdCol(rows,h){var st=h?1:0,bad=0,n=0;
+  for(var i=st;i<rows.length;i++){var c=rows[i][0];if(c===undefined)continue;n++;if(!isBin(c))bad++;}
+  return n>0&&bad/n>.5;}
+function loadFile(input,which){
+  var f=input.files&&input.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onerror=function(){msg('อ่านไฟล์ไม่สำเร็จ','er');};
+  rd.onload=function(e){try{
+    var rows=parseCSV(String(e.target.result));S.raw[which]=rows;
+    if(which==='Q'){S.Qapplied=null;document.getElementById('qBadge').classList.add('hide');}
+    S.linkOf=null;document.getElementById('mBadge').classList.add('hide');
+    document.getElementById(which==='R'?'dropR':'dropQ').classList.add('ok');
+    document.getElementById(which==='R'?'infoR':'infoQ').innerHTML=
+      '✅ <b>'+f.name+'</b> · '+rows.length+' แถว × '+rows[0].length+' คอลัมน์';
+    if(S.raw.R&&S.raw.Q)document.getElementById('btnRun').disabled=false;
+    msg('โหลดไฟล์เรียบร้อย'+(S.raw.R&&S.raw.Q?' — กด "เริ่มวิเคราะห์" ได้เลย':' — รออีก 1 ไฟล์'),'ok');
+  }catch(err){msg('ผิดพลาด: '+err.message,'er');}};
+  rd.readAsText(f,'UTF-8');}
+function msg(t,k){document.getElementById('loadMsg').innerHTML='<div class="msg m-'+(k||'ok')+'">'+t+'</div>';}
+function clearMixed(){S.linkOf=null;document.getElementById('mBadge').classList.add('hide');}
+function cvModeUI(){
+  var m=document.getElementById('optCVM').value;
+  document.getElementById('wrapK').classList.toggle('hide',m!=='KFOLD');
+  document.getElementById('wrapP').classList.toggle('hide',m==='KFOLD');
+  document.getElementById('wrapR').classList.toggle('hide',m!=='REPEAT');}
+function prog(title,txt,pc,show){
+  var el=document.getElementById('prog');
+  if(show===false){el.classList.add('hide');return;}
+  el.classList.remove('hide');
+  document.getElementById('progTitle').innerHTML=title;
+  document.getElementById('progTxt').textContent=txt;
+  document.getElementById('progBar').style.width=pc+'%';}
+
+/* ==========================================================
+   BUILD
+========================================================== */
+function buildData(){
+  var R=S.raw.R,Qr=S.raw.Q;
+  var hR=looksHeader(R[0]),idR=looksIdCol(R,hR),body=hR?R.slice(1):R,ids=[],X=[],miss=0;
+  body.forEach(function(r,i){
+    ids.push(idR?(r[0]||('STU-'+(i+1))):('STU-'+String(i+1).padStart(3,'0')));
+    X.push((idR?r.slice(1):r).map(function(c){if(isBin(c))return +c;miss++;return null;}));});
+  var J=Math.max.apply(null,X.map(function(r){return r.length;}));
+  X.forEach(function(r){while(r.length<J)r.push(null);});
+  S.itemNames=hR?(idR?R[0].slice(1):R[0]).slice(0,J):[];
+  for(var j=0;j<J;j++)if(!S.itemNames[j])S.itemNames[j]='I'+(j+1);
+  var hQ=looksHeader(Qr[0]),idQ=looksIdCol(Qr,hQ),qb=hQ?Qr.slice(1):Qr,Q=[];
+  qb.forEach(function(r){Q.push((idQ?r.slice(1):r).map(function(c){return isBin(c)?+c:0;}));});
+  var K=Math.max.apply(null,Q.map(function(r){return r.length;}));
+  Q.forEach(function(r){while(r.length<K)r.push(0);});
+  S.attrNames=hQ?(idQ?Qr[0].slice(1):Qr[0]).slice(0,K):[];
+  for(var k=0;k<K;k++)if(!S.attrNames[k])S.attrNames[k]='A'+(k+1);
+  S.Qorig=cloneQ(Q);
+  if(S.Qapplied&&S.Qapplied.length===Q.length&&S.Qapplied[0].length===K)Q=cloneQ(S.Qapplied);
+  var warn=[];
+  if(Q.length!==J)throw new Error('จำนวนข้อไม่ตรงกัน: Response มี '+J+' ข้อ แต่ Q-Matrix มี '+Q.length+' แถว');
+  if(K>12)throw new Error('จำนวนมิติ '+K+' มิติเกินขีดจำกัดของเบราว์เซอร์ — แนะนำ ≤ 12 มิติ');
+  if(K>=9)warn.push('มิติ '+K+' มิติ → '+(1<<K)+' คลาสแฝง การวนซ้ำ bootstrap และ cross-validation จะใช้เวลานานมาก');
+  if(X.length<30)warn.push('ผู้เข้าสอบเพียง '+X.length+' คน — EM ต้องการอย่างน้อย 200–500 คนจึงจะเสถียร');
+  if(miss)warn.push('พบค่าที่ไม่ใช่ 0/1 จำนวน '+miss+' เซลล์ (ถือเป็นข้อมูลขาดหาย)');
+  S.X=X;S.Q=Q;S.ids=ids;return warn;}
+function qWarnings(){
+  var w=[],K=S.attrNames.length,J=S.Q.length;
+  for(var k=0;k<K;k++){var c=0;for(var j=0;j<J;j++)if(S.Q[j][k]===1)c++;
+    if(!c)w.push('มิติ "'+S.attrNames[k]+'" ไม่มีข้อสอบวัดเลย');
+    else if(c<3)w.push('มิติ "'+S.attrNames[k]+'" มีเพียง '+c+' ข้อ');}
+  return w;}
+function refreshItemAttrs(){S.ip.forEach(function(o,j){
+  o.attrs=S.Q[j].map(function(v,k){return v?S.attrNames[k]:null;}).filter(Boolean);});}
+
+/* ==========================================================
+   QUADRATURE + IRT
+========================================================== */
+var QN=(function(){var n=[],w=[],lo=-4,hi=4,m=41,st=(hi-lo)/(m-1),s=0;
+  for(var i=0;i<m;i++){var t=lo+i*st;n.push(t);var d=normPdf(t);w.push(d);s+=d;}
+  return{node:n,wt:w.map(function(x){return x/s;}),m:m};})();
+function Pj(th,a,b){return 1/(1+Math.exp(-a*(th-b)));}
+
+function calibrateHeuristic(){
+  var X=S.X,N=X.length,J=X[0].length,ip=[];
+  var tot=X.map(function(r){return r.reduce(function(s,v){return s+(v===1?1:0);},0);});
+  for(var j=0;j<J;j++){
+    var n=0,c=0,rest=[],sc=[];
+    for(var i=0;i<N;i++){var v=X[i][j];if(v===null)continue;n++;if(v===1)c++;
+      rest.push(tot[i]-(v===1?1:0));sc.push(v);}
+    var p=clamp(n?c/n:.5,.02,.98),mr=mean(rest),sr=sd(rest),cov=0;
+    for(var i2=0;i2<sc.length;i2++)cov+=(sc[i2]-p)*(rest[i2]-mr);
+    cov/=(sc.length>1?sc.length-1:1);
+    var rpb=clamp((isFinite(sr)&&sr>0)?cov/(sr*Math.sqrt(p*(1-p))):.2,.02,.95);
+    var z=normInv(1-p),phi=Math.max(normPdf(z),1e-6);
+    var rbis=clamp(rpb*Math.sqrt(p*(1-p))/phi,.05,.90),a,b;
+    if(S.model==='RASCH'){a=1;b=clamp(Math.log((1-p)/p),-3.5,3.5);}
+    else{a=clamp(1.702*rbis/Math.sqrt(1-rbis*rbis),.35,2.8);b=clamp(z/rbis,-3.5,3.5);}
+    ip.push({j:j,name:S.itemNames[j],p:p,rpb:rpb,a:a,b:b,seA:NaN,seB:NaN,n:n,attrs:[]});}
+  if(S.model==='RASCH'){var mb=mean(ip.map(function(o){return o.b;}));ip.forEach(function(o){o.b-=mb;});}
+  S.ip=ip;refreshItemAttrs();}
+
+function mstepItem(rq,nq,a0,b0,rasch,lam){
+  var a=a0,b=b0,nd=QN.node,m=QN.m,LAM=(lam==null?0.10:lam);
+  for(var it=0;it<40;it++){
+    var g1=0,g2=0,h11=0,h12=0,h22=0;
+    for(var q=0;q<m;q++){var Nq=nq[q];if(Nq<1e-11)continue;
+      var d=nd[q]-b,P=1/(1+Math.exp(-a*d)),W=P*(1-P),e=rq[q]-Nq*P;
+      g1+=e*d;g2+=-a*e;h11+=-Nq*W*d*d;h12+=a*Nq*W*d-e;h22+=-a*a*Nq*W;}
+    var da=0,db=0;
+    if(rasch){if(Math.abs(h22)<1e-11)break;db=-g2/h22;}
+    else{g1+=-2*LAM*(a-1);h11+=-2*LAM;h11-=1e-7;h22-=1e-7;
+      var det=h11*h22-h12*h12;if(Math.abs(det)<1e-12)break;
+      da=-(h22*g1-h12*g2)/det;db=-(-h12*g1+h11*g2)/det;}
+    da=clamp(da,-.5,.5);db=clamp(db,-.5,.5);
+    a=rasch?1:clamp(a+da,.20,3.0);b=clamp(b+db,-4.5,4.5);
+    if(Math.abs(da)<1e-6&&Math.abs(db)<1e-6)break;}
+  var i11=0,i12=0,i22=0;
+  for(var q2=0;q2<m;q2++){var Nq2=nq[q2];if(Nq2<1e-11)continue;
+    var d2=nd[q2]-b,P2=1/(1+Math.exp(-a*d2)),W2=P2*(1-P2);
+    i11+=Nq2*W2*d2*d2;i12+=-a*Nq2*W2*d2;i22+=a*a*Nq2*W2;}
+  var seA=NaN,seB=NaN;
+  if(rasch)seB=i22>1e-10?1/Math.sqrt(i22):NaN;
+  else{var dt=i11*i22-i12*i12;if(dt>1e-10){seA=Math.sqrt(i22/dt);seB=Math.sqrt(i11/dt);}}
+  return{a:a,b:b,seA:seA,seB:seB};}
+
+function calibrateEM(maxIt){
+  var X=S.X,N=X.length,J=X[0].length,m=QN.m,nd=QN.node,wt=QN.wt,rasch=(S.model==='RASCH');
+  calibrateHeuristic();
+  var A=S.ip.map(function(o){return o.a;}),B=S.ip.map(function(o){return o.b;});
+  var ll=-Infinity,prev=-Infinity,it=0,conv=false,dmax=NaN,hist=[];
+  for(it=1;it<=maxIt;it++){
+    var lP=[],lQ=[];
+    for(var j=0;j<J;j++){var p1=new Float64Array(m),p0=new Float64Array(m);
+      for(var q=0;q<m;q++){var P=clamp(Pj(nd[q],A[j],B[j]),1e-10,1-1e-10);
+        p1[q]=Math.log(P);p0[q]=Math.log(1-P);}lP.push(p1);lQ.push(p0);}
+    var rjq=[],njq=[];
+    for(var j2=0;j2<J;j2++){rjq.push(new Float64Array(m));njq.push(new Float64Array(m));}
+    ll=0;
+    for(var i=0;i<N;i++){
+      var lw=new Float64Array(m),mx=-Infinity,row=X[i];
+      for(var q2=0;q2<m;q2++){var s=Math.log(wt[q2]);
+        for(var j3=0;j3<J;j3++){var x=row[j3];if(x===null)continue;s+=x===1?lP[j3][q2]:lQ[j3][q2];}
+        lw[q2]=s;if(s>mx)mx=s;}
+      var sum=0;for(var q3=0;q3<m;q3++){lw[q3]=Math.exp(lw[q3]-mx);sum+=lw[q3];}
+      ll+=mx+Math.log(sum);
+      for(var q4=0;q4<m;q4++){var po=lw[q4]/sum;if(po<1e-14)continue;
+        for(var j4=0;j4<J;j4++){var x2=row[j4];if(x2===null)continue;
+          njq[j4][q4]+=po;if(x2===1)rjq[j4][q4]+=po;}}}
+    dmax=0;
+    for(var j5=0;j5<J;j5++){var r=mstepItem(rjq[j5],njq[j5],A[j5],B[j5],rasch);
+      dmax=Math.max(dmax,Math.abs(r.a-A[j5]),Math.abs(r.b-B[j5]));
+      A[j5]=r.a;B[j5]=r.b;S.ip[j5].seA=r.seA;S.ip[j5].seB=r.seB;}
+    if(rasch){var mb=mean(B);for(var j6=0;j6<J;j6++)B[j6]-=mb;}
+    hist.push({it:it,ll:ll,d:dmax});
+    if(dmax<1e-4&&Math.abs(ll-prev)<1e-6){conv=true;break;}
+    prev=ll;}
+  S.ip.forEach(function(o,j){o.a=A[j];o.b=B[j];});
+  var npar=rasch?J:2*J;
+  S.em={it:it,conv:conv,ll:ll,dmax:dmax,npar:npar,hist:hist,aic:-2*ll+2*npar,bic:-2*ll+npar*Math.log(N)};}
+
+function estTheta(resp,items){
+  if(!items.length)return{th:NaN,se:NaN,n:0,pm:NaN,flag:'no-item'};
+  var used=items.filter(function(j){return resp[j]!==null;});
+  if(!used.length)return{th:NaN,se:NaN,n:0,pm:NaN,flag:'no-data'};
+  var sc=used.reduce(function(s,j){return s+resp[j];},0),perfect=(sc===0||sc===used.length);
+  if(S.est==='EAP'||perfect){
+    var lw=QN.node.map(function(t,q){var l=Math.log(QN.wt[q]);
+      used.forEach(function(j){var o=S.ip[j],P=clamp(Pj(t,o.a,o.b),1e-10,1-1e-10);
+        l+=resp[j]===1?Math.log(P):Math.log(1-P);});return l;});
+    var mx=Math.max.apply(null,lw),sum=0,m1=0,m2=0;
+    lw.forEach(function(v,q){var e=Math.exp(v-mx);sum+=e;m1+=e*QN.node[q];m2+=e*QN.node[q]*QN.node[q];});
+    var th=m1/sum,se=Math.sqrt(Math.max(m2/sum-th*th,1e-6));
+    return{th:th,se:se,n:used.length,pm:1-normCdf((S.cut-th)/se),
+      flag:perfect?(sc===0?'floor':'ceiling'):'ok',method:(S.est==='MLE'&&perfect)?'EAP*':'EAP'};}
+  var th2=0;
+  for(var it=0;it<60;it++){var d1=0,d2=0;
+    used.forEach(function(j){var o=S.ip[j],P=clamp(Pj(th2,o.a,o.b),1e-10,1-1e-10);
+      d1+=o.a*(resp[j]-P);d2-=o.a*o.a*P*(1-P);});
+    if(Math.abs(d2)<1e-9)break;
+    var st=clamp(d1/d2,-1,1);th2=clamp(th2-st,-4.5,4.5);
+    if(Math.abs(st)<1e-5)break;}
+  var I=0;used.forEach(function(j){var o=S.ip[j],P=Pj(th2,o.a,o.b);I+=o.a*o.a*P*(1-P);});
+  var se2=I>1e-8?1/Math.sqrt(I):NaN;
+  return{th:th2,se:se2,n:used.length,pm:isFinite(se2)?1-normCdf((S.cut-th2)/se2):NaN,flag:'ok',method:'MLE'};}
+
+/* ==========================================================
+   HIGHER-ORDER PRIOR
+========================================================== */
+function hoPrior(lam,C,K){
+  var m=QN.m,lp=[],lq=[];
+  for(var k=0;k<K;k++){var A=new Float64Array(m),B=new Float64Array(m);
+    for(var q=0;q<m;q++){var P=clamp(Pj(QN.node[q],lam[k].a,lam[k].b),1e-9,1-1e-9);
+      A[q]=Math.log(P);B[q]=Math.log(1-P);}lp.push(A);lq.push(B);}
+  var g=[],pi=new Float64Array(C);
+  for(var c=0;c<C;c++){var row=new Float64Array(m),s=0;
+    for(var q2=0;q2<m;q2++){var t=Math.log(QN.wt[q2]);
+      for(var k2=0;k2<K;k2++)t+=((c>>k2)&1)?lp[k2][q2]:lq[k2][q2];
+      row[q2]=Math.exp(t);s+=row[q2];}
+    g.push(row);pi[c]=Math.max(s,1e-300);}
+  return{g:g,pi:pi};}
+
+/* ==========================================================
+   G-DINA ENGINE
+========================================================== */
+function enforceMono(p,I,L,nb){
+  for(var it=0;it<40;it++){var ch=false;
+    for(var l=0;l<L;l++)for(var t=0;t<nb;t++){
+      if(l&(1<<t))continue;var l2=l|(1<<t);
+      if(p[l]>p[l2]+1e-10){var w1=Math.max(I[l],1e-6),w2=Math.max(I[l2],1e-6);
+        var mm=(p[l]*w1+p[l2]*w2)/(w1+w2);p[l]=mm;p[l2]=mm;ch=true;}}
+    if(!ch)break;}}
+
+function fitGDINA(linkSpec,mono,maxIt,struc,Xin,light){
+  var X=Xin||S.X,Q=S.Q,N=X.length,J=Q.length,K=Q[0].length,C=1<<K;
+  var ARR=(typeof linkSpec!=='string');
+  function lk(j){return ARR?linkSpec[j]:linkSpec;}
+  var alpha=[];for(var c=0;c<C;c++){var a=[];for(var k=0;k<K;k++)a.push((c>>k)&1);alpha.push(a);}
+  var req=[],grp=[],nl=[];
+  for(var j=0;j<J;j++){var r=[];for(var k2=0;k2<K;k2++)if(Q[j][k2]===1)r.push(k2);
+    req.push(r);var L=1<<r.length;nl.push(L);
+    var g=new Int32Array(C);
+    for(var c2=0;c2<C;c2++){var l=0;for(var t=0;t<r.length;t++)if(alpha[c2][r[t]])l|=(1<<t);g[c2]=l;}
+    grp.push(g);}
+  var P=[];for(var j2=0;j2<J;j2++){var L2=nl[j2],pp=new Float64Array(L2),kj=Math.max(req[j2].length,1);
+    for(var l2=0;l2<L2;l2++)pp[l2]=clamp(.15+.70*(popcount(l2)/kj),.02,.98);P.push(pp);}
+  var lam=[];for(var k3=0;k3<K;k3++)lam.push({a:1.0,b:0.0,seA:NaN,seB:NaN});
+  var HO=(struc==='HO')?hoPrior(lam,C,K):null;
+  var pi=new Float64Array(C);
+  if(HO)pi.set(HO.pi);else for(var c3=0;c3<C;c3++)pi[c3]=1/C;
+  var ll=0,prev=-Infinity,it=0,conv=false,post=null,dmax=NaN,hist=[],Rjc=null,Ijc=null;
+
+  for(it=1;it<=maxIt;it++){
+    var lp=[],lq=[];
+    for(var j3=0;j3<J;j3++){var A1=new Float64Array(C),A0=new Float64Array(C);
+      for(var c4=0;c4<C;c4++){var pv=clamp(P[j3][grp[j3][c4]],1e-6,1-1e-6);
+        A1[c4]=Math.log(pv);A0[c4]=Math.log(1-pv);}lp.push(A1);lq.push(A0);}
+    var Ic=new Float64Array(C);
+    Rjc=[];Ijc=[];for(var j4=0;j4<J;j4++){Rjc.push(new Float64Array(C));Ijc.push(new Float64Array(C));}
+    post=[];ll=0;
+    for(var i=0;i<N;i++){
+      var row=X[i],lw=new Float64Array(C),mx=-Infinity;
+      for(var c5=0;c5<C;c5++){var s=Math.log(Math.max(pi[c5],1e-300));
+        for(var j5=0;j5<J;j5++){var x=row[j5];if(x===null)continue;s+=x===1?lp[j5][c5]:lq[j5][c5];}
+        lw[c5]=s;if(s>mx)mx=s;}
+      var sum=0;for(var c6=0;c6<C;c6++){lw[c6]=Math.exp(lw[c6]-mx);sum+=lw[c6];}
+      ll+=mx+Math.log(sum);
+      var pr=new Float64Array(C);
+      for(var c7=0;c7<C;c7++){var po=lw[c7]/sum;pr[c7]=po;if(po<1e-13)continue;Ic[c7]+=po;
+        for(var j6=0;j6<J;j6++){var x2=row[j6];if(x2===null)continue;
+          Ijc[j6][c7]+=po;if(x2===1)Rjc[j6][c7]+=po;}}
+      if(!light)post.push(pr);}
+    var Rjl=[],Ijl=[];
+    for(var j7=0;j7<J;j7++){var Rr=new Float64Array(nl[j7]),Ii=new Float64Array(nl[j7]);
+      for(var c8=0;c8<C;c8++){var g2=grp[j7][c8];Rr[g2]+=Rjc[j7][c8];Ii[g2]+=Ijc[j7][c8];}
+      Rjl.push(Rr);Ijl.push(Ii);}
+    dmax=0;
+    for(var j8=0;j8<J;j8++){
+      var LK=lk(j8),L3=nl[j8],kj2=req[j8].length,I3=Ijl[j8],R3=Rjl[j8],np=new Float64Array(L3),old=P[j8];
+      if(LK==='DINA'||LK==='DINO'||kj2===0){
+        var isHi=function(l){return LK==='DINO'?(l!==0):(l===L3-1);};
+        var r1=0,i1=0,r0=0,i0=0;
+        for(var l3=0;l3<L3;l3++){if(isHi(l3)){r1+=R3[l3];i1+=I3[l3];}else{r0+=R3[l3];i0+=I3[l3];}}
+        var p1=i1>1e-8?clamp(r1/i1,.001,.999):old[L3-1],p0=i0>1e-8?clamp(r0/i0,.001,.999):old[0];
+        if(p1<p0){var av=(p1*i1+p0*i0)/Math.max(i1+i0,1e-8);p1=av;p0=av;}
+        for(var l4=0;l4<L3;l4++)np[l4]=isHi(l4)?p1:p0;
+      }else if(LK==='ACDM'){
+        var mm=kj2+1,AA=[],bb=[];
+        for(var t1=0;t1<mm;t1++){AA.push(new Array(mm).fill(0));bb.push(0);}
+        for(var l5=0;l5<L3;l5++){var w=I3[l5];if(w<1e-9)continue;
+          var y=clamp(R3[l5]/w,0,1),z=[1];for(var t2=0;t2<kj2;t2++)z.push((l5>>t2)&1);
+          for(var r4=0;r4<mm;r4++){bb[r4]+=w*z[r4]*y;
+            for(var c9=0;c9<mm;c9++)AA[r4][c9]+=w*z[r4]*z[c9];}}
+        for(var d1=0;d1<mm;d1++)AA[d1][d1]+=1e-6;
+        var dd=solveLS(AA,bb);
+        if(dd){for(var l6=0;l6<L3;l6++){var v=dd[0];
+          for(var t3=0;t3<kj2;t3++)if((l6>>t3)&1)v+=dd[t3+1];np[l6]=clamp(v,.001,.999);}}
+        else for(var l7=0;l7<L3;l7++)np[l7]=old[l7];
+      }else{for(var l8=0;l8<L3;l8++)np[l8]=I3[l8]>1e-8?clamp(R3[l8]/I3[l8],.001,.999):old[l8];}
+      if(mono&&kj2>0)enforceMono(np,I3,L3,kj2);
+      for(var l9=0;l9<L3;l9++){dmax=Math.max(dmax,Math.abs(np[l9]-old[l9]));P[j8][l9]=np[l9];}}
+    if(struc==='HO'){
+      var m2=QN.m,nkq=[],rkq=[];
+      for(var k4=0;k4<K;k4++){nkq.push(new Float64Array(m2));rkq.push(new Float64Array(m2));}
+      for(var c10=0;c10<C;c10++){var wgt=Ic[c10]/HO.pi[c10];if(!(wgt>0))continue;
+        var gc=HO.g[c10];
+        for(var q5=0;q5<m2;q5++){var vv=wgt*gc[q5];if(vv<1e-14)continue;
+          for(var k5=0;k5<K;k5++){nkq[k5][q5]+=vv;if((c10>>k5)&1)rkq[k5][q5]+=vv;}}}
+      for(var k6=0;k6<K;k6++){
+        var rr=mstepItem(rkq[k6],nkq[k6],lam[k6].a,lam[k6].b,false,0.05);
+        dmax=Math.max(dmax,Math.abs(rr.a-lam[k6].a),Math.abs(rr.b-lam[k6].b));
+        lam[k6]={a:rr.a,b:rr.b,seA:rr.seA,seB:rr.seB};}
+      HO=hoPrior(lam,C,K);pi.set(HO.pi);
+    }else{for(var c11=0;c11<C;c11++)pi[c11]=Math.max(Ic[c11]/N,1e-12);}
+    hist.push({it:it,ll:ll,d:dmax});
+    if(dmax<1e-5&&Math.abs(ll-prev)<1e-6){conv=true;break;}
+    prev=ll;}
+
+  var npar=(struc==='HO')?2*K:(C-1),linkOf=[];
+  for(var j9=0;j9<J;j9++){var kj3=req[j9].length,LK2=lk(j9);linkOf.push(kj3?LK2:'GDINA');
+    npar+=(LK2==='DINA'||LK2==='DINO')?(kj3?2:1):(LK2==='ACDM'?kj3+1:nl[j9]);}
+  var items=[];
+  for(var j10=0;j10<J;j10++){
+    var L4=nl[j10],g3=P[j10][0],p1b=P[j10][L4-1],vio=0;
+    for(var l10=0;l10<L4;l10++)for(var t4=0;t4<req[j10].length;t4++){
+      if(l10&(1<<t4))continue;if(P[j10][l10]>P[j10][l10|(1<<t4)]+1e-6)vio++;}
+    items.push({name:S.itemNames[j10],req:req[j10].map(function(k){return S.attrNames[k];}),
+      nreq:req[j10].length,link:linkOf[j10],g:g3,p1:p1b,delta:p1b-g3,vio:vio,P:Array.from(P[j10])});}
+  var prev2=new Array(K).fill(0);
+  for(var c12=0;c12<C;c12++)for(var k7=0;k7<K;k7++)if(alpha[c12][k7])prev2[k7]+=pi[c12];
+  var out={K:K,C:C,link:ARR?'MIXED':linkSpec,linkOf:linkOf,mono:mono,struc:struc,it:it,conv:conv,
+    ll:ll,npar:npar,aic:-2*ll+2*npar,bic:-2*ll+npar*Math.log(N),items:items,pi:Array.from(pi),
+    prevalence:prev2,lam:lam,Rjc:Rjc,Ijc:Ijc,alpha:alpha,req:req,nl:nl,grp:grp,N:N,hist:hist,
+    Qused:cloneQ(Q)};
+  if(light)return out;
+  var marg=[],map=[],mapP=[],accSum=0,accN=0,patAcc=0;
+  for(var i2=0;i2<N;i2++){
+    var pr2=post[i2],mk=new Array(K).fill(0),bi=0,bp=-1;
+    for(var c13=0;c13<C;c13++){var p2=pr2[c13];if(p2>bp){bp=p2;bi=c13;}
+      if(p2<1e-13)continue;for(var k8=0;k8<K;k8++)if(alpha[c13][k8])mk[k8]+=p2;}
+    marg.push(mk);map.push(alpha[bi].slice());mapP.push(bp);patAcc+=bp;
+    for(var k9=0;k9<K;k9++){accSum+=Math.max(mk[k9],1-mk[k9]);accN++;}}
+  var order=[];for(var c14=0;c14<C;c14++)order.push({c:c14,pi:pi[c14],a:alpha[c14]});
+  order.sort(function(x,y){return y.pi-x.pi;});
+  out.marg=marg;out.map=map;out.mapP=mapP;
+  out.accAttr=accN?accSum/accN:NaN;out.accPattern=N?patAcc/N:NaN;out.classes=order.slice(0,14);
+  return out;}
+
+/* --- ให้คะแนนชุดข้อมูลใหม่ด้วยพารามิเตอร์ที่ตรึงไว้ (out-of-sample) --- */
+function scoreGDINA(G,X){
+  var N=X.length,J=G.grp.length,C=G.C,K=G.K,pi=G.pi;
+  var lp=[],lq=[];
+  for(var j=0;j<J;j++){var A=new Float64Array(C),B=new Float64Array(C);
+    for(var c=0;c<C;c++){var p=clamp(G.items[j].P[G.grp[j][c]],1e-6,1-1e-6);
+      A[c]=Math.log(p);B[c]=Math.log(1-p);}lp.push(A);lq.push(B);}
+  var ll=0,marg=[],map=[],mapP=[],accS=0,accN=0,patS=0,ent=0;
+  for(var i=0;i<N;i++){
+    var row=X[i],lw=new Float64Array(C),mx=-Infinity;
+    for(var c2=0;c2<C;c2++){var s=Math.log(Math.max(pi[c2],1e-300));
+      for(var j2=0;j2<J;j2++){var x=row[j2];if(x===null)continue;s+=x===1?lp[j2][c2]:lq[j2][c2];}
+      lw[c2]=s;if(s>mx)mx=s;}
+    var sum=0;for(var c3=0;c3<C;c3++){lw[c3]=Math.exp(lw[c3]-mx);sum+=lw[c3];}
+    ll+=mx+Math.log(sum);
+    var mk=new Array(K).fill(0),bi=0,bp=-1,e=0;
+    for(var c4=0;c4<C;c4++){var po=lw[c4]/sum;
+      if(po>bp){bp=po;bi=c4;}
+      if(po>1e-13){e-=po*Math.log(po);
+        for(var k=0;k<K;k++)if((c4>>k)&1)mk[k]+=po;}}
+    ent+=e;marg.push(mk);map.push(G.alpha[bi].slice());mapP.push(bp);patS+=bp;
+    for(var k2=0;k2<K;k2++){accS+=Math.max(mk[k2],1-mk[k2]);accN++;}}
+  return{ll:ll,llPer:N?ll/N:NaN,marg:marg,map:map,mapP:mapP,
+    Pa:accN?accS/accN:NaN,Pc:N?patS/N:NaN,entropy:N?ent/N:NaN,N:N};}
+
+/* ==========================================================
+   Q-MATRIX VALIDATION
+========================================================== */
+function validateQ(eps,G){
+  var J=S.Q.length,K=S.attrNames.length,C=1<<K,full=C-1;
+  var gI=new Float64Array(C),gR=new Float64Array(C),res=[],nFlag=0;
+  for(var j=0;j<J;j++){
+    var I=G.Ijc[j],R=G.Rjc[j],Itot=0,Rtot=0;
+    for(var c=0;c<C;c++){Itot+=I[c];Rtot+=R[c];}
+    var pbar=Itot>1e-9?Rtot/Itot:0;
+    function zeta2(mask){
+      gI.fill(0);gR.fill(0);
+      for(var c2=0;c2<C;c2++){var l=c2&mask;gI[l]+=I[c2];gR[l]+=R[c2];}
+      var z=0;
+      for(var l2=0;l2<C;l2++){var w=gI[l2];if(w<1e-9)continue;
+        var pl=w/Itot,Pl=gR[l2]/w;z+=pl*(Pl-pbar)*(Pl-pbar);}
+      return z;}
+    var zmax=zeta2(full),provMask=maskOf(S.Q[j]);
+    if(!(zmax>1e-9)){
+      res.push({j:j,name:S.itemNames[j],ok:true,degenerate:true,prov:provMask,provP:NaN,
+        sugg:provMask,suggP:NaN,size:popcount(provMask),bySize:[],top:[],delta:0});continue;}
+    var pv=new Float64Array(C);
+    for(var q=1;q<C;q++)pv[q]=zeta2(q)/zmax;
+    var bySize=[],sugg=full,suggP=1;
+    for(var s=1;s<=K;s++){
+      var bq=0,bp=-1;
+      for(var q2=1;q2<C;q2++)if(popcount(q2)===s&&pv[q2]>bp){bp=pv[q2];bq=q2;}
+      bySize.push({size:s,q:bq,pvaf:bp});
+      if(bp>=eps){sugg=bq;suggP=bp;break;}}
+    if(bySize.length&&bySize[bySize.length-1].pvaf<eps){
+      var lb=bySize[bySize.length-1];sugg=lb.q;suggP=lb.pvaf;}
+    var top=[];for(var q3=1;q3<C;q3++)top.push({q:q3,pvaf:pv[q3],k:popcount(q3)});
+    top.sort(function(x,y){return y.pvaf-x.pvaf||x.k-y.k;});
+    var provP=provMask?pv[provMask]:0,same=(provMask===sugg);if(!same)nFlag++;
+    res.push({j:j,name:S.itemNames[j],ok:same,degenerate:false,prov:provMask,provP:provP,
+      sugg:sugg,suggP:suggP,size:popcount(sugg),bySize:bySize,top:top.slice(0,10),delta:suggP-provP});}
+  var valid=res.filter(function(o){return !o.degenerate;});
+  return{eps:eps,rows:res,nFlag:nFlag,K:K,
+    meanProv:valid.length?mean(valid.map(function(o){return o.provP;})):NaN,
+    meanSugg:valid.length?mean(valid.map(function(o){return o.suggP;})):NaN};}
+function suggestedQfrom(V){var K=V.K;
+  return V.rows.map(function(o){var r=[];for(var k=0;k<K;k++)r.push((o.sugg>>k)&1);return r;});}
+
+function iterativeQV(opt,Xin){
+  var rounds=[],seen={},Qcur=cloneQ(S.Q),status='',cycleAt=-1;
+  seen[keyQ(Qcur)]=0;
+  for(var r=1;r<=opt.maxR;r++){
+    S.Q=cloneQ(Qcur);
+    var G=fitGDINA(opt.link,opt.mono,opt.maxIt,opt.struc,Xin);
+    var V=validateQ(opt.eps,G);
+    var nch=V.rows.filter(function(o){return !o.ok&&!o.degenerate;}).length;
+    rounds.push({r:r,Q:cloneQ(Qcur),npar:G.npar,ll:G.ll,aic:G.aic,bic:G.bic,nch:nch,
+      acc:G.accAttr,conv:G.conv,G:G,V:V});
+    if(nch===0){status='ลู่เข้า — ไม่มีข้อใดต้องปรับอีก';break;}
+    var Qs=suggestedQfrom(V),key=keyQ(Qs);
+    if(seen[key]!==undefined){status='ตรวจพบวงวน (cycle) — Q ชุดนี้เคยปรากฏที่รอบ '+seen[key];
+      cycleAt=seen[key];break;}
+    seen[key]=r;Qcur=Qs;
+    if(r===opt.maxR)status='ครบรอบสูงสุดโดยยังไม่ลู่เข้า';}
+  var pick=rounds[0],mode=opt.pick;
+  if(mode==='LAST')pick=rounds[rounds.length-1];
+  else rounds.forEach(function(o){
+    var cur=(mode==='AIC')?o.aic:o.bic,bst=(mode==='AIC')?pick.aic:pick.bic;
+    if(cur<bst)pick=o;});
+  S.Q=cloneQ(pick.Q);
+  var hist={rounds:rounds.map(function(o){return{r:o.r,npar:o.npar,ll:o.ll,aic:o.aic,bic:o.bic,
+    nch:o.nch,acc:o.acc,conv:o.conv,best:(o.r===pick.r)};}),status:status,pick:pick.r,mode:mode,
+    cycleAt:cycleAt,nRounds:rounds.length,changed:diffCount(S.Qorig,S.Q)};
+  return{G:pick.G,V:pick.V,hist:hist};}
+function diffCount(A,B){var n=0;
+  for(var i=0;i<A.length;i++)for(var k=0;k<A[i].length;k++)if(A[i][k]!==B[i][k])n++;return n;}
+function itemDiff(A,B){var n=0;
+  for(var i=0;i<A.length;i++){var d=false;
+    for(var k=0;k<A[i].length;k++)if(A[i][k]!==B[i][k])d=true;if(d)n++;}return n;}
+
+/* ==========================================================
+   WALD TEST
+========================================================== */
+function waldRestrictions(kind,kj){
+  var L=1<<kj,R=[];
+  if(kind==='DINA'){for(var l=1;l<=L-2;l++){var row=new Array(L).fill(0);row[l]=1;row[0]=-1;R.push(row);}}
+  else if(kind==='DINO'){for(var l2=1;l2<=L-2;l2++){var r2=new Array(L).fill(0);r2[l2]=1;r2[L-1]=-1;R.push(r2);}}
+  else{for(var Sm=1;Sm<L;Sm++){if(popcount(Sm)<2)continue;
+    var r3=new Array(L).fill(0),ps=popcount(Sm);
+    for(var T=0;T<L;T++)if((T&Sm)===T)r3[T]=((ps-popcount(T))%2===0)?1:-1;
+    R.push(r3);}}
+  return R;}
+function waldOne(p,V,kind,kj){
+  var Rm=waldRestrictions(kind,kj),d=Rm.length,L=1<<kj,g=[],A=[];
+  for(var i=0;i<d;i++){var s=0;for(var l=0;l<L;l++)s+=Rm[i][l]*p[l];g.push(s);}
+  for(var i2=0;i2<d;i2++){var rr=new Array(d).fill(0);
+    for(var i3=0;i3<d;i3++){var s2=0;
+      for(var l2=0;l2<L;l2++){var rv=Rm[i2][l2];if(!rv)continue;
+        for(var m2=0;m2<L;m2++){var rw=Rm[i3][m2];if(!rw)continue;s2+=rv*V[l2][m2]*rw;}}
+      rr[i3]=s2;}
+    A.push(rr);}
+  for(var i4=0;i4<d;i4++)A[i4][i4]+=1e-12;
+  var W=quadForm(A,g);
+  return{W:W,df:d,p:isFinite(W)&&W>0?chisqP(W,d):NaN};}
+function runWald(Gsat,alpha,useBH){
+  var J=S.Q.length,rows=[],nparSat=0,nparSel=0,sel=[];
+  for(var j=0;j<J;j++){
+    var req=Gsat.req[j],kj=req.length,L=1<<kj,C=Gsat.C;
+    var I=new Float64Array(L),R=new Float64Array(L);
+    for(var c=0;c<C;c++){var l=Gsat.grp[j][c];I[l]+=Gsat.Ijc[j][c];R[l]+=Gsat.Rjc[j][c];}
+    var p=new Array(L),minI=Infinity;
+    for(var l2=0;l2<L;l2++){p[l2]=I[l2]>1e-8?clamp(R[l2]/I[l2],1e-4,1-1e-4):0.5;minI=Math.min(minI,I[l2]);}
+    if(kj===0){rows.push({j:j,name:S.itemNames[j],kj:0,req:[],na:'ไม่มีมิติใน Q',sel:'GDINA',npS:1,npL:1});
+      nparSat+=1;continue;}
+    if(kj===1){rows.push({j:j,name:S.itemNames[j],kj:1,req:req.map(function(k){return S.attrNames[k];}),
+      na:'มิติเดียว — ทุกโมเดลเทียบเท่ากัน',sel:'DINA',npS:2,npL:2,minI:minI,p:p,I:Array.from(I)});
+      nparSat+=2;continue;}
+    var V=[];for(var a=0;a<L;a++){var rr=new Array(L).fill(0);
+      rr[a]=p[a]*(1-p[a])/Math.max(I[a],1e-6);V.push(rr);}
+    rows.push({j:j,name:S.itemNames[j],kj:kj,req:req.map(function(k){return S.attrNames[k];}),
+      p:p,I:Array.from(I),minI:minI,low:minI<5,npS:L,
+      dina:waldOne(p,V,'DINA',kj),dino:waldOne(p,V,'DINO',kj),acdm:waldOne(p,V,'ACDM',kj)});
+    nparSat+=L;}
+  var res={alpha:alpha,useBH:useBH,rows:rows};
+  finalizeWald(res,'');
+  rows.forEach(function(o){nparSel+=o.npL||0;sel.push(o.sel||'GDINA');});
+  var cnt={GDINA:0,DINA:0,DINO:0,ACDM:0,NA:0};
+  rows.forEach(function(o){if(o.na)cnt.NA++;else cnt[o.sel]++;});
+  res.cnt=cnt;res.sel=sel;res.nparSat=nparSat;res.nparSel=nparSel;res.saved=nparSat-nparSel;
+  return res;}
+function finalizeWald(res,key){
+  var rows=res.rows,alpha=res.alpha;
+  var pv={DINA:[],DINO:[],ACDM:[]},idx=[];
+  rows.forEach(function(o){
+    if(o.na){o['sel'+key]=o.sel||'GDINA';o['npL'+key]=o.npL||1;if(key==='')o.npL=o.npL||1;return;}
+    var d=o['dina'+key],n=o['dino'+key],a=o['acdm'+key];
+    if(!d||!n||!a)return;
+    pv.DINA.push(d.p);pv.DINO.push(n.p);pv.ACDM.push(a.p);idx.push(o);});
+  var adj=res.useBH?{DINA:bhAdjust(pv.DINA),DINO:bhAdjust(pv.DINO),ACDM:bhAdjust(pv.ACDM)}:pv;
+  idx.forEach(function(o,i){
+    var pD=adj.DINA[i],pO=adj.DINO[i],pA=adj.ACDM[i];
+    o['padj'+key]={DINA:pD,DINO:pO,ACDM:pA};
+    var cand=[];
+    if(isFinite(pD)&&pD>=alpha)cand.push({m:'DINA',np:2,p:pD});
+    if(isFinite(pO)&&pO>=alpha)cand.push({m:'DINO',np:2,p:pO});
+    if(isFinite(pA)&&pA>=alpha)cand.push({m:'ACDM',np:o.kj+1,p:pA});
+    cand.sort(function(x,y){return x.np-y.np||y.p-x.p;});
+    var pick=cand.length?cand[0].m:'GDINA';
+    o['sel'+key]=pick;
+    o['npL'+key]=pick==='GDINA'?o.npS:(pick==='ACDM'?o.kj+1:2);
+    o['nCand'+key]=cand.length;});}
+
+/* ==========================================================
+   ABSOLUTE FIT
+========================================================== */
+function classProbMat(G){
+  var J=G.grp.length,C=G.C,Pc=[];
+  for(var j=0;j<J;j++){var a=new Float64Array(C);
+    for(var c=0;c<C;c++)a[c]=G.items[j].P[G.grp[j][c]];Pc.push(a);}
+  return Pc;}
+
+function absFit(G,X){
+  var J=G.grp.length,N=X.length,C=G.C,Pm=classProbMat(G),pi=G.pi;
+  var Pe=new Float64Array(J),Po=new Float64Array(J),madU=0,nU=0;
+  for(var j=0;j<J;j++){var s=0;for(var c=0;c<C;c++)s+=pi[c]*Pm[j][c];Pe[j]=s;
+    var n1=0,nn=0;
+    for(var i=0;i<N;i++){var v=X[i][j];if(v===null)continue;nn++;if(v===1)n1++;}
+    Po[j]=nn?n1/nn:0;madU+=Math.abs(Po[j]-Pe[j]);nU++;}
+  madU=nU?madU/nU:NaN;
+  var sumSq=0,sumAbs=0,sumLor=0,cnt=0,maxChi=-1,maxChiPair=null,maxZ=-1,pairs=[];
+  for(var a=0;a<J;a++)for(var b=a+1;b<J;b++){
+    var n11=0,n10=0,n01=0,n00=0;
+    for(var i2=0;i2<N;i2++){var xa=X[i2][a],xb=X[i2][b];
+      if(xa===null||xb===null)continue;
+      if(xa===1){if(xb===1)n11++;else n10++;}else{if(xb===1)n01++;else n00++;}}
+    var n=n11+n10+n01+n00;if(n<10)continue;
+    var o11=n11/n,pa=(n11+n10)/n,pb=(n11+n01)/n,va=pa*(1-pa),vb=pb*(1-pb);
+    var robs=(va>1e-9&&vb>1e-9)?(o11-pa*pb)/Math.sqrt(va*vb):0;
+    var e11=0;for(var c3=0;c3<C;c3++)e11+=pi[c3]*Pm[a][c3]*Pm[b][c3];
+    var ea=Pe[a],eb=Pe[b],vea=ea*(1-ea),veb=eb*(1-eb);
+    var rexp=(vea>1e-9&&veb>1e-9)?(e11-ea*eb)/Math.sqrt(vea*veb):0;
+    var d=robs-rexp;sumSq+=d*d;sumAbs+=Math.abs(d);cnt++;
+    var E=[e11,ea-e11,eb-e11,1-ea-eb+e11],O=[n11,n10,n01,n00],chi=0;
+    for(var t=0;t<4;t++){var ec=Math.max(E[t],1e-9)*n;chi+=(O[t]-ec)*(O[t]-ec)/ec;}
+    var ro=clamp(robs,-.999,.999),re=clamp(rexp,-.999,.999);
+    var z=Math.abs(.5*Math.log((1+ro)/(1-ro))-.5*Math.log((1+re)/(1-re)))*Math.sqrt(Math.max(n-3,1));
+    var loO=Math.log(((n11+.5)*(n00+.5))/((n10+.5)*(n01+.5)));
+    var loE=Math.log((Math.max(E[0],1e-9)*Math.max(E[3],1e-9))/(Math.max(E[1],1e-9)*Math.max(E[2],1e-9)));
+    var dl=Math.abs(loO-loE);sumLor+=dl;
+    if(chi>maxChi){maxChi=chi;maxChiPair=[a,b];}
+    if(z>maxZ)maxZ=z;
+    pairs.push({a:a,b:b,robs:robs,rexp:rexp,d:d,chi:chi,z:z,dl:dl,n:n});}
+  var np=Math.max(cnt,1);
+  return{srmsr:Math.sqrt(sumSq/np),madcor:sumAbs/np,madlor:sumLor/np,madU:madU,
+    maxChi:maxChi,maxChiPair:maxChiPair,maxZ:maxZ,nPairs:cnt,pairs:pairs,
+    pChiBonf:Math.min(1,cnt*chisqP(maxChi,1)),pZBonf:Math.min(1,cnt*2*(1-normCdf(maxZ)))};}
+
+/* ==========================================================
+   M₂ · RMSEA₂ · CFI₂ / TLI₂
+========================================================== */
+function buildMomentIdx(J){
+  var idx=[];
+  for(var j=0;j<J;j++)idx.push([j]);
+  for(var a=0;a<J;a++)for(var b=a+1;b<J;b++)idx.push([a,b]);
+  return idx;}
+function momVecModel(Pc,pi,midx){
+  var s=midx.length,C=pi.length,v=new Float64Array(s);
+  for(var i=0;i<s;i++){var L=midx[i],t=0;
+    if(L.length===1){var A=Pc[L[0]];for(var c=0;c<C;c++)t+=pi[c]*A[c];}
+    else{var A2=Pc[L[0]],B2=Pc[L[1]];for(var c2=0;c2<C;c2++)t+=pi[c2]*A2[c2]*B2[c2];}
+    v[i]=t;}
+  return v;}
+function momVecObs(X,midx){
+  var s=midx.length,N=X.length,v=new Float64Array(s);
+  for(var i=0;i<s;i++){var L=midx[i],n=0,c=0;
+    if(L.length===1){for(var p=0;p<N;p++){var x=X[p][L[0]];if(x===null)continue;n++;if(x===1)c++;}}
+    else{for(var p2=0;p2<N;p2++){var x1=X[p2][L[0]],x2=X[p2][L[1]];
+      if(x1===null||x2===null)continue;n++;if(x1===1&&x2===1)c++;}}
+    v[i]=n?c/n:0;}
+  return v;}
+function unionOf(A,B){
+  var u=A.slice();
+  for(var i=0;i<B.length;i++)if(u.indexOf(B[i])<0)u.push(B[i]);
+  return u;}
+function xiMat(Pc,pi,midx,mv){
+  var s=midx.length,C=pi.length,Xi=new Float64Array(s*s);
+  for(var a=0;a<s;a++)for(var b=a;b<s;b++){
+    var u=unionOf(midx[a],midx[b]),t=0;
+    if(u.length===1){var A=Pc[u[0]];for(var c=0;c<C;c++)t+=pi[c]*A[c];}
+    else if(u.length===2){var A1=Pc[u[0]],B1=Pc[u[1]];
+      for(var c1=0;c1<C;c1++)t+=pi[c1]*A1[c1]*B1[c1];}
+    else if(u.length===3){var a3=Pc[u[0]],b3=Pc[u[1]],c3=Pc[u[2]];
+      for(var i3=0;i3<C;i3++)t+=pi[i3]*a3[i3]*b3[i3]*c3[i3];}
+    else{var a4=Pc[u[0]],b4=Pc[u[1]],c4=Pc[u[2]],d4=Pc[u[3]];
+      for(var i4=0;i4<C;i4++)t+=pi[i4]*a4[i4]*b4[i4]*c4[i4]*d4[i4];}
+    var v=t-mv[a]*mv[b];Xi[a*s+b]=v;Xi[b*s+a]=v;}
+  return Xi;}
+/* --- pack / expand พารามิเตอร์ข้อสอบตามฟังก์ชันเชื่อมโยง --- */
+function packItem(P,link,kj){
+  var L=P.length;
+  if(kj===0)return [P[0]];
+  if(link==='DINA'||link==='DINO')return [P[0],P[L-1]];
+  if(link==='ACDM'){var v=[P[0]];for(var t=0;t<kj;t++)v.push(P[1<<t]-P[0]);return v;}
+  return P.slice();}
+function expandItem(free,link,kj,L){
+  var P=new Array(L);
+  if(kj===0){P[0]=free[0];return P;}
+  if(link==='DINA'){for(var l=0;l<L;l++)P[l]=(l===L-1)?free[1]:free[0];return P;}
+  if(link==='DINO'){for(var l2=0;l2<L;l2++)P[l2]=(l2===0)?free[0]:free[1];return P;}
+  if(link==='ACDM'){for(var l3=0;l3<L;l3++){var v=free[0];
+    for(var t=0;t<kj;t++)if((l3>>t)&1)v+=free[t+1];P[l3]=v;}return P;}
+  return free.slice();}
+/* --- Jacobian ∂π₂/∂θ --- */
+function jacobian2(G,midx,Pc){
+  var J=G.grp.length,C=G.C,K=G.K,s=midx.length,pi=G.pi,cols=[];
+  var involve=[];for(var j=0;j<J;j++)involve.push([]);
+  midx.forEach(function(L,i){L.forEach(function(j){involve[j].push(i);});});
+  for(var j2=0;j2<J;j2++){
+    var link=G.linkOf[j2],kj=G.req[j2].length,L2=G.nl[j2],P0=G.items[j2].P;
+    var free=packItem(P0,link,kj),h=1e-4,grpj=G.grp[j2],inv=involve[j2];
+    for(var f=0;f<free.length;f++){
+      var fp=free.slice();fp[f]+=h;var Pp=expandItem(fp,link,kj,L2);
+      var fm=free.slice();fm[f]-=h;var Pm=expandItem(fm,link,kj,L2);
+      var rowP=new Float64Array(C),rowM=new Float64Array(C);
+      for(var c=0;c<C;c++){rowP[c]=Pp[grpj[c]];rowM[c]=Pm[grpj[c]];}
+      var col=new Float64Array(s);
+      for(var q=0;q<inv.length;q++){
+        var i2=inv[q],Lm=midx[i2],tp=0,tm=0;
+        if(Lm.length===1){for(var c2=0;c2<C;c2++){tp+=pi[c2]*rowP[c2];tm+=pi[c2]*rowM[c2];}}
+        else{var other=(Lm[0]===j2)?Lm[1]:Lm[0],O=Pc[other];
+          for(var c3=0;c3<C;c3++){tp+=pi[c3]*rowP[c3]*O[c3];tm+=pi[c3]*rowM[c3]*O[c3];}}
+        col[i2]=(tp-tm)/(2*h);}
+      cols.push(col);}}
+  if(G.struc==='SAT'){
+    var mC=[];
+    for(var c4=0;c4<C;c4++){var arr=new Float64Array(s);
+      for(var i5=0;i5<s;i5++){var L5=midx[i5];
+        arr[i5]=(L5.length===1)?Pc[L5[0]][c4]:Pc[L5[0]][c4]*Pc[L5[1]][c4];}
+      mC.push(arr);}
+    for(var c5=1;c5<C;c5++){var col2=new Float64Array(s);
+      for(var i6=0;i6<s;i6++)col2[i6]=mC[c5][i6]-mC[0][i6];
+      cols.push(col2);}
+  }else{
+    for(var k=0;k<K;k++)for(var t=0;t<2;t++){
+      var h2=1e-4,lp=G.lam.map(function(o){return{a:o.a,b:o.b};}),
+          lm=G.lam.map(function(o){return{a:o.a,b:o.b};});
+      if(t===0){lp[k].a+=h2;lm[k].a-=h2;}else{lp[k].b+=h2;lm[k].b-=h2;}
+      var mp=momVecModel(Pc,hoPrior(lp,C,K).pi,midx),
+          mm=momVecModel(Pc,hoPrior(lm,C,K).pi,midx),col3=new Float64Array(s);
+      for(var i7=0;i7<s;i7++)col3[i7]=(mp[i7]-mm[i7])/(2*h2);
+      cols.push(col3);}}
+  return cols;}
+/* --- แกน M₂ --- */
+function m2Core(e,Xi,cols,N,s,fixed){
+  var A=new Float64Array(s*s);A.set(Xi);
+  var tr=0;for(var i=0;i<s;i++)tr+=A[i*s+i];
+  var rg=Math.max(tr/Math.max(s,1)*1e-9,1e-13);
+  for(var i2=0;i2<s;i2++)A[i2*s+i2]+=rg;
+  var piv=luFactor(A,s);if(!piv)return null;
+  var u=new Float64Array(e);luSolve(A,piv,s,u);
+  var eu=0;for(var i3=0;i3<s;i3++)eu+=e[i3]*u[i3];
+  if(fixed)return{M2:N*eu,df:s};
+  var q=cols.length,W=[];
+  for(var c=0;c<q;c++){var w=new Float64Array(cols[c]);luSolve(A,piv,s,w);W.push(w);}
+  var AA=[],bb=[];
+  for(var a=0;a<q;a++){var row=new Array(q).fill(0);
+    for(var b=0;b<q;b++){var t=0,ca=cols[a],wb=W[b];
+      for(var i4=0;i4<s;i4++)t+=ca[i4]*wb[i4];row[b]=t;}
+    AA.push(row);
+    var t2=0,ca2=cols[a];for(var i5=0;i5<s;i5++)t2+=ca2[i5]*u[i5];bb.push(t2);}
+  for(var d=0;d<q;d++)AA[d][d]+=1e-10;
+  var v=solveLS(AA,bb),corr=0;
+  if(v)for(var i6=0;i6<q;i6++)corr+=bb[i6]*v[i6];
+  return{M2:Math.max(N*(eu-corr),0),df:s-q};}
+function rmseaFrom(M2,df,N){
+  if(!(df>0)||!isFinite(M2))return null;
+  var r=Math.sqrt(Math.max(M2-df,0)/(N*df));
+  var lL=findLambda(M2,df,.95),lU=findLambda(M2,df,.05);
+  var lam0=.05*.05*N*df;
+  return{rmsea:r,lo:Math.sqrt(lL/(N*df)),hi:Math.sqrt(lU/(N*df)),
+    pClose:1-ncChisqCdf(M2,df,lam0)};}
+/* --- โมเดลฐาน (independence) สำหรับ CFI₂ / TLI₂ --- */
+function m2Baseline(mObs,midx,J,N){
+  var s=midx.length,p=new Float64Array(J);
+  for(var j=0;j<J;j++)p[j]=clamp(mObs[j],1e-6,1-1e-6);
+  var mB=new Float64Array(s);
+  for(var i=0;i<s;i++){var L=midx[i];
+    mB[i]=(L.length===1)?p[L[0]]:p[L[0]]*p[L[1]];}
+  var Xi=new Float64Array(s*s);
+  for(var a=0;a<s;a++)for(var b=a;b<s;b++){
+    var u=unionOf(midx[a],midx[b]),t=1;
+    for(var z=0;z<u.length;z++)t*=p[u[z]];
+    var v=t-mB[a]*mB[b];Xi[a*s+b]=v;Xi[b*s+a]=v;}
+  var cols=[];
+  for(var l=0;l<J;l++){var col=new Float64Array(s);
+    for(var i2=0;i2<s;i2++){var L2=midx[i2];
+      if(L2.length===1)col[i2]=(L2[0]===l)?1:0;
+      else col[i2]=(L2[0]===l?p[L2[1]]:0)+(L2[1]===l?p[L2[0]]:0);}
+    cols.push(col);}
+  var e=new Float64Array(s);
+  for(var i3=0;i3<s;i3++)e[i3]=mObs[i3]-mB[i3];
+  return m2Core(e,Xi,cols,N,s,false);}
+
+function computeM2(G,X,opt){
+  opt=opt||{};
+  var J=G.grp.length,N=X.length,s=J+J*(J-1)/2;
+  if(s>1200)return{err:'จำนวนโมเมนต์ '+s+' ตัว (J = '+J+') เกินขีดจำกัดของการคำนวณในเบราว์เซอร์'};
+  var midx=buildMomentIdx(J),Pc=classProbMat(G),pi=G.pi;
+  var mMod=momVecModel(Pc,pi,midx),mObs=momVecObs(X,midx);
+  var Xi=xiMat(Pc,pi,midx,mMod);
+  var e=new Float64Array(s);
+  for(var i=0;i<s;i++)e[i]=mObs[i]-mMod[i];
+  if(opt.fixed){
+    var rf=m2Core(e,Xi,null,N,s,true);
+    if(!rf)return{err:'เมทริกซ์ Ξ₂ เอกฐาน (singular) — ไม่สามารถคำนวณ M₂ ได้'};
+    var rm0=rmseaFrom(rf.M2,rf.df,N);
+    return{M2:rf.M2,df:rf.df,p:chisqP(rf.M2,rf.df),N:N,s:s,q:0,fixed:true,
+      rmsea:rm0?rm0.rmsea:NaN,lo:rm0?rm0.lo:NaN,hi:rm0?rm0.hi:NaN,pClose:rm0?rm0.pClose:NaN};}
+  var cols=jacobian2(G,midx,Pc);
+  var r=m2Core(e,Xi,cols,N,s,false);
+  if(!r)return{err:'เมทริกซ์ Ξ₂ เอกฐาน (singular) — ไม่สามารถคำนวณ M₂ ได้'};
+  if(r.df<=0)return{err:'องศาอิสระ = '+r.df+' (โมเมนต์ '+s+' ตัว · พารามิเตอร์ '+cols.length+' ตัว) — โมเดลอิ่มตัวเกินกว่าจะทดสอบได้'};
+  var rm=rmseaFrom(r.M2,r.df,N),out={M2:r.M2,df:r.df,p:chisqP(r.M2,r.df),N:N,s:s,q:cols.length,
+    rmsea:rm.rmsea,lo:rm.lo,hi:rm.hi,pClose:rm.pClose,fixed:false};
+  var bs=m2Baseline(mObs,midx,J,N);
+  if(bs&&bs.df>0){
+    out.M2B=bs.M2;out.dfB=bs.df;
+    var d1=Math.max(out.M2-out.df,0),d0=Math.max(bs.M2-bs.df,0);
+    out.cfi=d0>1e-9?clamp(1-d1/Math.max(d0,d1,1e-9),0,1):NaN;
+    var r0=bs.M2/bs.df,r1=out.M2/out.df;
+    out.tli=(r0-1)>1e-9?clamp((r0-r1)/(r0-1),0,1.2):NaN;}
+  return out;}
+
+/* ==========================================================
+   PARAMETRIC BOOTSTRAP
+========================================================== */
+function simulateFrom(G){
+  var N=S.X.length,J=G.grp.length,C=G.C,cum=new Float64Array(C),s=0;
+  for(var c=0;c<C;c++){s+=G.pi[c];cum[c]=s;}
+  var X=[];
+  for(var i=0;i<N;i++){
+    var u=rnd()*s,lo=0,hi=C-1;
+    while(lo<hi){var mid=(lo+hi)>>1;if(u<=cum[mid])hi=mid;else lo=mid+1;}
+    var row=[],orig=S.X[i];
+    for(var j=0;j<J;j++)row.push(orig[j]===null?null:(rnd()<G.items[j].P[G.grp[j][lo]]?1:0));
+    X.push(row);}
+  return X;}
+
+function startBootstrap(done){
+  var B=+document.getElementById('optB').value,
+      mode=document.getElementById('optBM').value,
+      bIt=clamp(+document.getElementById('optBIt').value||120,20,600);
+  var G0=S.gd,link=S.linkUsed,mono=S.mono,struc=S.struc,useM2=!!S.m2&&!S.m2.err;
+  var rep={srmsr:[],madcor:[],madlor:[],maxChi:[],maxZ:[],madU:[],M2:[]},
+      pv=[],ipar=[],prev=[],lamA=[],lamB=[],b=0,t0=performance.now();
+  for(var j=0;j<S.Q.length;j++){pv.push([]);ipar.push([]);}
+  for(var k=0;k<S.attrNames.length;k++){prev.push([]);lamA.push([]);lamB.push([]);}
+  step();
+  function step(){
+    var tc=performance.now();
+    while(b<B&&performance.now()-tc<140){
+      var Xb=simulateFrom(G0);
+      var Gb=(mode==='REFIT')?fitGDINA(link,mono,bIt,struc,Xb,true):G0;
+      var af=absFit(Gb,Xb);
+      rep.srmsr.push(af.srmsr);rep.madcor.push(af.madcor);rep.madlor.push(af.madlor);
+      rep.maxChi.push(af.maxChi);rep.maxZ.push(af.maxZ);rep.madU.push(af.madU);
+      if(useM2&&mode==='REFIT'&&B<=200){
+        var mb=computeM2(Gb,Xb,{});if(mb&&!mb.err)rep.M2.push(mb.M2);}
+      if(mode==='REFIT'){
+        for(var j2=0;j2<S.Q.length;j2++){pv[j2].push(Gb.items[j2].P.slice());
+          ipar[j2].push({g:Gb.items[j2].g,p1:Gb.items[j2].p1,d:Gb.items[j2].delta});}
+        for(var k2=0;k2<S.attrNames.length;k2++){prev[k2].push(Gb.prevalence[k2]);
+          if(struc==='HO'){lamA[k2].push(Gb.lam[k2].a);lamB[k2].push(Gb.lam[k2].b);}}}
+      b++;}
+    var pc=Math.round(100*b/B);
+    prog('🔁 Parametric Bootstrap','รอบที่ '+b+' / '+B+' ('+pc+'%) · ใช้เวลาแล้ว '+
+      ((performance.now()-t0)/1000).toFixed(1)+' วินาที',pc);
+    if(b<B){setTimeout(step,0);return;}
+    finish();}
+  function finish(){
+    function pval(arr,obs){var ge=0;arr.forEach(function(v){if(isFinite(v)&&v>=obs)ge++;});
+      return (1+ge)/(arr.length+1);}
+    function st(arr,obs){return{obs:obs,p:pval(arr,obs),m:mean(arr),sd:sd(arr),
+      lo:quantile(arr,.025),hi:quantile(arr,.975),q95:quantile(arr,.95)};}
+    var A=S.af;
+    S.boot={B:B,mode:mode,sec:((performance.now()-t0)/1000).toFixed(1),
+      fit:{srmsr:st(rep.srmsr,A.srmsr),madcor:st(rep.madcor,A.madcor),
+        madlor:st(rep.madlor,A.madlor),maxChi:st(rep.maxChi,A.maxChi),
+        maxZ:st(rep.maxZ,A.maxZ),madU:st(rep.madU,A.madU)}};
+    if(rep.M2.length>=20&&S.m2&&!S.m2.err)
+      S.boot.m2=st(rep.M2,S.m2.M2);
+    if(mode==='REFIT'){
+      S.boot.items=ipar.map(function(rs,j){
+        var gs=rs.map(function(o){return o.g;}),ps=rs.map(function(o){return o.p1;}),
+            ds=rs.map(function(o){return o.d;});
+        return{g:{se:sd(gs),lo:quantile(gs,.025),hi:quantile(gs,.975)},
+               p1:{se:sd(ps)},delta:{se:sd(ds),lo:quantile(ds,.025),hi:quantile(ds,.975)}};});
+      S.boot.prev=prev.map(function(v){return{se:sd(v),lo:quantile(v,.025),hi:quantile(v,.975)};});
+      if(struc==='HO')S.boot.lam=lamA.map(function(v,k){
+        return{aSE:sd(v),bSE:sd(lamB[k]),aLo:quantile(v,.025),aHi:quantile(v,.975)};});
+      S.boot.pv=pv;waldWithBootCov();}
+    prog('','',0,false);
+    renderGDINA();renderWald();renderAF();renderM2();
+    if(done)done();}}
+
+function waldWithBootCov(){
+  if(!S.wald||!S.boot||!S.boot.pv)return;
+  S.wald.rows.forEach(function(o){
+    if(o.na||!o.p)return;
+    var reps=S.boot.pv[o.j],L=o.p.length;
+    if(!reps||reps.length<L+3){o.bootFail=true;return;}
+    var mu=new Array(L).fill(0);
+    reps.forEach(function(v){for(var l=0;l<L;l++)mu[l]+=v[l];});
+    for(var l2=0;l2<L;l2++)mu[l2]/=reps.length;
+    var V=[];for(var l3=0;l3<L;l3++)V.push(new Array(L).fill(0));
+    reps.forEach(function(v){for(var i=0;i<L;i++)for(var j=0;j<L;j++)
+      V[i][j]+=(v[i]-mu[i])*(v[j]-mu[j]);});
+    for(var i2=0;i2<L;i2++)for(var j2=0;j2<L;j2++)V[i2][j2]/=(reps.length-1);
+    o.Vboot=V;o.dinaB=waldOne(o.p,V,'DINA',o.kj);
+    o.dinoB=waldOne(o.p,V,'DINO',o.kj);o.acdmB=waldOne(o.p,V,'ACDM',o.kj);});
+  finalizeWald(S.wald,'B');
+  var cnt={GDINA:0,DINA:0,DINO:0,ACDM:0,NA:0},nSel=0;
+  S.wald.rows.forEach(function(o){var s=o.selB||o.sel||'GDINA';
+    if(o.na)cnt.NA++;else cnt[s]++;nSel+=(o.npLB!==undefined?o.npLB:(o.npL||1));});
+  S.wald.cntB=cnt;S.wald.nparSelB=nSel;
+  S.wald.selB=S.wald.rows.map(function(o){return o.selB||o.sel||'GDINA';});}
+
+/* ==========================================================
+   CROSS-VALIDATION
+========================================================== */
+function subsetX(X,idx){var o=[];for(var i=0;i<idx.length;i++)o.push(X[idx[i]]);return o;}
+
+function fitPipeline(Xcal,opt){
+  var Qsave=cloneQ(S.Q),link=opt.link0,qvH=null,wald=null,G=null;
+  S.Q=cloneQ(opt.Q0);
+  if(opt.reselect&&opt.useQV&&opt.useIter){
+    var r=iterativeQV({link:link,mono:opt.mono,maxIt:opt.maxIt,struc:opt.struc,
+      eps:opt.eps,maxR:opt.maxR,pick:opt.pick},Xcal);
+    G=r.G;qvH=r.hist;
+  }else G=fitGDINA(link,opt.mono,opt.maxIt,opt.struc,Xcal);
+  if(opt.reselect&&opt.useWald){
+    var Gs=(typeof link==='string'&&link==='GDINA')?G
+      :fitGDINA('GDINA',opt.mono,opt.maxIt,opt.struc,Xcal);
+    wald=runWald(Gs,opt.alpha,opt.useBH);
+    link=wald.sel.slice();
+    G=fitGDINA(link,opt.mono,opt.maxIt,opt.struc,Xcal);}
+  var out={Q:cloneQ(S.Q),link:link,G:G,qvHist:qvH,wald:wald};
+  S.Q=Qsave;return out;}
+
+function cohensKappa(a,b){
+  var n=a.length,po=0,n1a=0,n1b=0;
+  for(var i=0;i<n;i++){if(a[i]===b[i])po++;if(a[i]===1)n1a++;if(b[i]===1)n1b++;}
+  po/=n;var p1=n1a/n,p2=n1b/n,pe=p1*p2+(1-p1)*(1-p2);
+  return{po:po,kappa:pe<1-1e-9?(po-pe)/(1-pe):1};}
+
+function startCV(done){
+  var mode=document.getElementById('optCVM').value,
+      k=+document.getElementById('optK').value||5,
+      prop=clamp(+document.getElementById('optProp').value||.7,.4,.9),
+      nRep=clamp(+document.getElementById('optRep').value||10,2,50),
+      reselect=document.getElementById('optResel').checked,
+      cvIt=clamp(+document.getElementById('optCVIt').value||150,30,600);
+  var N=S.X.length,J=S.Q.length,K=S.attrNames.length;
+  var opt={Q0:cloneQ(S.Qorig),link0:document.getElementById('optGDM').value,
+    reselect:reselect,mono:S.mono,maxIt:cvIt,struc:S.struc,eps:S.eps,
+    maxR:clamp(+document.getElementById('optQR').value||10,2,40),
+    pick:document.getElementById('optPick').value,alpha:S.alpha,
+    useBH:document.getElementById('optBH').checked,
+    useQV:document.getElementById('optQV').checked,
+    useIter:document.getElementById('optIter').checked,
+    useWald:document.getElementById('optWald').checked};
+  var perm=shuffled(N),splits=[];
+  if(mode==='KFOLD'){
+    for(var f=0;f<k;f++){var val=[],cal=[];
+      for(var i=0;i<N;i++){if(i%k===f)val.push(perm[i]);else cal.push(perm[i]);}
+      splits.push({cal:cal,val:val,label:'Fold '+(f+1)});}
+  }else if(mode==='HOLDOUT'){
+    var nc=Math.round(N*prop);
+    splits.push({cal:perm.slice(0,nc),val:perm.slice(nc),label:'Holdout'});
+  }else{
+    for(var r=0;r<nRep;r++){var pm=shuffled(N),nc2=Math.round(N*prop);
+      splits.push({cal:pm.slice(0,nc2),val:pm.slice(nc2),label:'ครั้งที่ '+(r+1)});}}
+  var folds=[],fi=0,t0=performance.now();
+  var oofMap=new Array(N).fill(null),oofMarg=new Array(N).fill(null),oofP=new Array(N).fill(null);
+  var qCount=[];for(var j=0;j<J;j++)qCount.push(new Array(K).fill(0));
+  var linkCount=[];for(var j2=0;j2<J;j2++)linkCount.push({GDINA:0,DINA:0,DINO:0,ACDM:0});
+  step();
+  function step(){
+    if(fi>=splits.length){finish();return;}
+    var sp=splits[fi],Xc=subsetX(S.X,sp.cal),Xv=subsetX(S.X,sp.val);
+    var res=fitPipeline(Xc,opt),G=res.G;
+    var sc=scoreGDINA(G,Xv),scIn=scoreGDINA(G,Xc);
+    var afV=absFit(G,Xv),afC=absFit(G,Xc);
+    var m2V=null;
+    if(document.getElementById('optM2').checked){
+      var Qs=cloneQ(S.Q);S.Q=cloneQ(res.Q);
+      m2V=computeM2(G,Xv,{fixed:true});S.Q=Qs;}
+    for(var j3=0;j3<J;j3++){
+      for(var k2=0;k2<K;k2++)if(res.Q[j3][k2]===1)qCount[j3][k2]++;
+      var lkj=(typeof res.link==='string')?res.link:res.link[j3];
+      if(linkCount[j3][lkj]!==undefined)linkCount[j3][lkj]++;}
+    sp.val.forEach(function(pid,vi){oofMap[pid]=sc.map[vi];oofMarg[pid]=sc.marg[vi];oofP[pid]=sc.mapP[vi];});
+    folds.push({label:sp.label,nCal:sp.cal.length,nVal:sp.val.length,
+      llVal:sc.ll,llValPer:sc.llPer,llCalPer:scIn.llPer,
+      Pa:sc.Pa,Pc:sc.Pc,PaIn:scIn.Pa,PcIn:scIn.Pc,entropy:sc.entropy,
+      srmsrVal:afV.srmsr,srmsrCal:afC.srmsr,madVal:afV.madcor,madCal:afC.madcor,
+      m2:m2V,npar:G.npar,conv:G.conv,
+      qChanged:diffCount(S.Qorig,res.Q),itemChanged:itemDiff(S.Qorig,res.Q),
+      link:(typeof res.link==='string')?null:res.link.slice(),
+      wcnt:res.wald?res.wald.cnt:null});
+    fi++;
+    var pc=Math.round(100*fi/splits.length);
+    prog('🔀 Cross-Validation','กำลังประมวลผล '+sp.label+' ('+fi+' / '+splits.length+') · ใช้เวลาแล้ว '+
+      ((performance.now()-t0)/1000).toFixed(1)+' วินาที',pc);
+    setTimeout(step,0);}
+  function finish(){
+    var agree=null;
+    if(S.gd&&S.gd.map){
+      var perAttr=[],allA=[],allB=[],exact=0,nUsed=0;
+      for(var k3=0;k3<K;k3++){var a=[],b=[];
+        for(var i2=0;i2<N;i2++){if(!oofMap[i2])continue;a.push(oofMap[i2][k3]);b.push(S.gd.map[i2][k3]);}
+        perAttr.push(a.length?cohensKappa(a,b):{po:NaN,kappa:NaN});
+        allA=allA.concat(a);allB=allB.concat(b);}
+      for(var i3=0;i3<N;i3++){if(!oofMap[i3])continue;nUsed++;
+        var same=true;for(var k4=0;k4<K;k4++)if(oofMap[i3][k4]!==S.gd.map[i3][k4])same=false;
+        if(same)exact++;}
+      agree={perAttr:perAttr,overall:allA.length?cohensKappa(allA,allB):null,
+        exact:nUsed?exact/nUsed:NaN,nUsed:nUsed};}
+    S.cv={mode:mode,k:k,prop:prop,nRep:nRep,reselect:reselect,folds:folds,
+      sec:((performance.now()-t0)/1000).toFixed(1),
+      qCount:qCount,linkCount:linkCount,nSplit:splits.length,
+      oofMap:oofMap,oofMarg:oofMarg,oofP:oofP,agree:agree,
+      avg:{llVal:mean(folds.map(function(o){return o.llValPer;})),
+        llCal:mean(folds.map(function(o){return o.llCalPer;})),
+        Pa:mean(folds.map(function(o){return o.Pa;})),
+        Pc:mean(folds.map(function(o){return o.Pc;})),
+        PaIn:mean(folds.map(function(o){return o.PaIn;})),
+        PcIn:mean(folds.map(function(o){return o.PcIn;})),
+        srmsrVal:mean(folds.map(function(o){return o.srmsrVal;})),
+        srmsrCal:mean(folds.map(function(o){return o.srmsrCal;})),
+        qChanged:mean(folds.map(function(o){return o.qChanged;}))}};
+    prog('','',0,false);renderCV();if(done)done();}}
+
+/* ==========================================================
+   PIPELINE
+========================================================== */
+function runAnalysis(){
+  msg('⏳ กำลังคำนวณ MML-EM · Q-Validation · G-DINA · Wald · Absolute Fit · M₂ …','wn');
+  document.getElementById('btnRun').disabled=true;
+  setTimeout(function(){try{doAnalysis();}catch(e){msg('❌ '+e.message,'er');
+    prog('','',0,false);document.getElementById('btnRun').disabled=false;}},50);}
+
+function doAnalysis(){
+  var t0=performance.now();
+  RNG.seed(+document.getElementById('optSeed').value||20260901);
+  S.cal=document.getElementById('optCal').value;
+  S.model=document.getElementById('optModel').value;
+  S.est=document.getElementById('optEst').value;
+  S.struc=document.getElementById('optStruc').value;
+  S.cut=Number(document.getElementById('optCut').value)||0;
+  S.threshold=clamp(Number(document.getElementById('optThr').value)||.70,.5,.99);
+  S.eps=clamp(Number(document.getElementById('optEps').value)||.95,.5,.999);
+  S.alpha=Number(document.getElementById('optAlpha').value)||.05;
+  S.mono=document.getElementById('optMono').checked;
+  S.maxIt=clamp(Number(document.getElementById('optIt').value)||300,20,2000);
+  var maxR=clamp(Number(document.getElementById('optQR').value)||10,2,40);
+  var useGD=document.getElementById('optGD').checked,
+      useQV=document.getElementById('optQV').checked,
+      useIter=document.getElementById('optIter').checked,
+      useWald=document.getElementById('optWald').checked,
+      useBH=document.getElementById('optBH').checked,
+      autoW=document.getElementById('optAutoW').checked,
+      useAF=document.getElementById('optAF').checked,
+      useM2=document.getElementById('optM2').checked,
+      useBoot=document.getElementById('optBoot').checked,
+      useCV=document.getElementById('optCV').checked,
+      baseLink=document.getElementById('optGDM').value,
+      pick=document.getElementById('optPick').value;
+
+  var warn=buildData();
+  if(S.cal==='EM')calibrateEM(S.maxIt);else{calibrateHeuristic();S.em=null;}
+
+  S.gd=null;S.qv=null;S.qvHist=null;S.wald=null;S.af=null;S.boot=null;S.m2=null;S.cv=null;
+  var link=S.linkOf?S.linkOf:baseLink;S.linkUsed=link;
+  if(useGD){
+    if(useQV&&useIter){
+      var res=iterativeQV({link:link,mono:S.mono,maxIt:S.maxIt,struc:S.struc,
+        eps:S.eps,maxR:maxR,pick:pick});
+      S.gd=res.G;S.qv=res.V;S.qvHist=res.hist;
+    }else{S.gd=fitGDINA(link,S.mono,S.maxIt,S.struc);
+      if(useQV)S.qv=validateQ(S.eps,S.gd);}
+    if(useWald){
+      var Gsat=(typeof link==='string'&&link==='GDINA')?S.gd:fitGDINA('GDINA',S.mono,S.maxIt,S.struc);
+      S.wald=runWald(Gsat,S.alpha,useBH);
+      if(autoW&&!S.linkOf){
+        S.linkOf=S.wald.sel.slice();S.linkUsed=S.linkOf;
+        document.getElementById('mBadge').classList.remove('hide');
+        S.gd=fitGDINA(S.linkOf,S.mono,S.maxIt,S.struc);
+        if(useQV)S.qv=validateQ(S.eps,S.gd);}}
+    if(useAF)S.af=absFit(S.gd,S.X);
+    if(useM2)S.m2=computeM2(S.gd,S.X,{});}
+
+  refreshItemAttrs();warn=warn.concat(qWarnings());
+
+  var K=S.attrNames.length,J=S.X[0].length,idx=[],all=[];
+  for(var k=0;k<K;k++){var a=[];for(var j=0;j<J;j++)if(S.Q[j][k]===1)a.push(j);idx.push(a);}
+  for(var j2=0;j2<J;j2++)all.push(j2);
+  S.students=S.X.map(function(resp,i){
+    var th=[],se=[],pm=[],nn=[],fl=[];
+    idx.forEach(function(items){var r=estTheta(resp,items);
+      th.push(r.th);se.push(r.se);pm.push(r.pm);nn.push(r.n);fl.push(r.flag);});
+    var g=estTheta(resp,all);
+    return{id:S.ids[i],theta:th,seTheta:se,pMastery:pm,nItems:nn,flags:fl,
+      gTheta:g.th,gSe:g.se,method:g.method,raw:resp.reduce(function(s,v){return s+(v===1?1:0);},0)};});
+
+  document.getElementById('qBadge').classList.toggle('hide',keyQ(S.Q)===keyQ(S.Qorig));
+  document.getElementById('stuSel').innerHTML=S.students.map(function(s,i){
+    return '<option value="'+i+'">'+s.id+' · SS '+SS.fmt(s.gTheta)+
+      (S.gd?' · α ['+S.gd.map[i].join('')+']':'')+'</option>';}).join('');
+  document.getElementById('pnlMain').classList.remove('hide');
+  renderAll();tab('g');
+
+  var sec=((performance.now()-t0)/1000).toFixed(2);
+  var base='✅ วิเคราะห์สำเร็จใน '+sec+' วินาที — ผู้เข้าสอบ '+S.students.length+' คน · ข้อสอบ '+J+' ข้อ · มิติ '+K+
+    (S.em?'<br>· MML-EM: '+(S.em.conv?'ลู่เข้า':'ครบรอบ')+' ที่รอบ '+S.em.it:'')+
+    (S.qvHist?'<br>· Iterative Q: '+S.qvHist.status+' (เลือกรอบที่ '+S.qvHist.pick+')':'')+
+    (S.gd?'<br>· '+(S.gd.link==='MIXED'?'G-DINA ผสมรายข้อ':S.gd.link)+' · พารามิเตอร์ '+S.gd.npar+
+      ' · BIC '+S.gd.bic.toFixed(1):'')+
+    (S.af?'<br>· SRMSR = '+S.af.srmsr.toFixed(4)+' · MADcor = '+S.af.madcor.toFixed(4):'')+
+    (S.m2&&!S.m2.err?'<br>· M₂('+S.m2.df+') = '+S.m2.M2.toFixed(2)+' · p = '+S.m2.p.toFixed(4)+
+      ' · RMSEA₂ = '+S.m2.rmsea.toFixed(4)+' [90% CI '+S.m2.lo.toFixed(4)+', '+S.m2.hi.toFixed(4)+']':'')+
+    (S.m2&&S.m2.err?'<br>· M₂: '+S.m2.err:'')+
+    (warn.length?'<br>⚠️ '+warn.join('<br>⚠️ '):'');
+  msg(base,warn.length?'wn':'ok');
+  document.getElementById('pnlMain').scrollIntoView({behavior:'smooth'});
+
+  var chain=[];
+  if(useGD&&useBoot&&useAF)chain.push(function(next){startBootstrap(next);});
+  if(useGD&&useCV)chain.push(function(next){startCV(next);});
+  (function runChain(i){
+    if(i>=chain.length){
+      msg(base+
+        (S.boot?'<br>· Bootstrap '+S.boot.B+' รอบ — p(SRMSR) = '+S.boot.fit.srmsr.p.toFixed(3):'')+
+        (S.cv?'<br>· Cross-Validation '+S.cv.nSplit+' ชุด ('+S.cv.sec+' วินาที) — CV log-lik/คน = '+
+          S.cv.avg.llVal.toFixed(4)+' · CV Pa = '+(S.cv.avg.Pa*100).toFixed(1)+'%':''),
+        warn.length?'wn':'ok');
+      document.getElementById('btnRun').disabled=false;return;}
+    chain[i](function(){runChain(i+1);});})(0);}
+
+function renderAll(){
+  renderGroup();renderItemTable();renderGDINA();renderQV();renderWald();
+  renderAF();renderM2();renderCV();renderDiag();}
+
+function tab(t){
+  ['g','i','d','q','w','f','m','c','s'].forEach(function(x){
+    document.getElementById('pg-'+x).classList.toggle('hide',x!==t);
+    document.getElementById('tb-'+x).classList.toggle('on',x===t);});
+  if(t==='s'){var s=curStu();if(s){drawAbilityChart('cvAbility',s);drawMastery('cvMastery',s);}}
+  if(t==='g')drawHist('cvHist',S.students.map(function(o){return SS.calc(o.gTheta);}).filter(function(v){return v!==null;}));
+  if(t==='d'&&S.gd)drawPrev('cvPrev');
+  if(t==='q'&&S.qv){drawPVAF('cvPvaf');if(S.qvHist)drawBIC('cvBic');}
+  if(t==='f'&&S.af){drawResid('cvResid');if(S.boot)drawBootDist('cvBoot');}
+  if(t==='m'&&S.m2&&!S.m2.err)drawRmsea('cvRmsea');
+  if(t==='c'&&S.cv)drawCVGap('cvGap');}
+
+/* ==========================================================
+   RENDER — GROUP
+========================================================== */
+function renderGroup(){
+  var g=S.students.map(function(s){return s.gTheta;});
+  var ssv=g.map(function(t){return SS.calc(t);}).filter(function(v){return v!==null;});
+  var lo=S.students.filter(function(s){return SS.calc(s.gTheta)<45;}).length;
+  var hi=S.students.filter(function(s){return SS.calc(s.gTheta)>=60;}).length;
+  var rel=(function(){var v=S.students.map(function(s){return s.gSe;}).filter(isFinite);
+    if(!v.length)return NaN;var ms=v.reduce(function(a,b){return a+b*b;},0)/v.length;
+    var vt=Math.pow(sd(g),2);return isFinite(vt)&&vt>0?clamp(1-ms/vt,0,1):NaN;})();
+  document.getElementById('kpiG').innerHTML=
+    '<div><b>'+S.students.length+'</b><span>ผู้เข้าสอบ</span></div>'+
+    '<div><b>'+S.X[0].length+'</b><span>ข้อสอบ</span></div>'+
+    '<div><b>'+S.attrNames.length+'</b><span>มิติความสามารถ</span></div>'+
+    '<div><b>'+(ssv.length?mean(ssv).toFixed(1):'–')+'</b><span>SCALE SCORE เฉลี่ย</span></div>'+
+    '<div><b>'+(ssv.length?sd(ssv).toFixed(1):'–')+'</b><span>SD ของ SS</span></div>'+
+    '<div><b>'+(isFinite(rel)?rel.toFixed(3):'–')+'</b><span>ความเที่ยงเชิงประจักษ์</span></div>'+
+    '<div><b style="color:var(--er)">'+lo+'</b><span>ต้องพัฒนา (SS&lt;45)</span></div>'+
+    '<div><b style="color:var(--ok)">'+hi+'</b><span>สูง (SS≥60)</span></div>';
+  var rows='';
+  if(S.em)rows+='<tr><td style="text-align:left;font-weight:700">IRT '+S.model+' (MML-EM)</td><td>'+
+    S.em.npar+'</td><td>'+(-2*S.em.ll).toFixed(2)+'</td><td>'+S.em.aic.toFixed(2)+'</td><td>'+
+    S.em.bic.toFixed(2)+'</td><td>–</td><td>–</td><td>'+
+    (S.em.conv?'<span class="tag t-ok">ลู่เข้า</span>':'<span class="tag t-wn">ครบรอบ</span>')+'</td></tr>';
+  if(S.gd)rows+='<tr class="sum"><td style="text-align:left">'+
+    (S.gd.link==='MIXED'?'G-DINA ผสมรายข้อ':S.gd.link)+' · '+
+    (S.gd.struc==='HO'?'Higher-Order':'Saturated')+'</td><td>'+S.gd.npar+'</td><td>'+
+    (-2*S.gd.ll).toFixed(2)+'</td><td>'+S.gd.aic.toFixed(2)+'</td><td>'+S.gd.bic.toFixed(2)+'</td>'+
+    '<td>'+(S.af?S.af.srmsr.toFixed(4):'–')+'</td>'+
+    '<td>'+(S.m2&&!S.m2.err?S.m2.rmsea.toFixed(4):'–')+'</td><td>'+
+    (S.gd.conv?'<span class="tag t-ok">ลู่เข้า</span>':'<span class="tag t-wn">ครบรอบ</span>')+'</td></tr>';
+  document.getElementById('fitTbl').innerHTML=rows
+    ?'<table><thead><tr><th style="text-align:left">โมเดล</th><th>พารามิเตอร์</th><th>−2LL</th>'+
+     '<th>AIC</th><th>BIC</th><th>SRMSR</th><th>RMSEA₂</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+     '<p class="note">AIC/BIC ตอบว่าโมเดลใด “ดีกว่ากัน” · SRMSR และ RMSEA₂ ตอบว่าโมเดล “ดีพอหรือยัง” · '+
+     'ส่วน Cross-Validation ตอบว่าความดีนั้น “จะยังคงอยู่กับกลุ่มตัวอย่างใหม่หรือไม่”</p>'
+    :'<p class="note">ยังไม่มีการประมาณค่าแบบ EM</p>';
+  if(S.em){var h=S.em.hist,pk=[];
+    for(var i=0;i<h.length;i++)if(i<3||i===h.length-1||i%Math.ceil(h.length/8)===0)pk.push(h[i]);
+    document.getElementById('emLog').innerHTML='<b>บันทึกการลู่เข้าของ MML-EM:</b> '+
+      pk.map(function(r){return 'รอบ '+r.it+' → LL '+r.ll.toFixed(3);}).join(' · ');}
+  drawHist('cvHist',ssv);}
+
+function drawHist(id,vals){
+  var cv=document.getElementById(id);if(!cv||!vals||!vals.length)return;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=250;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=46,pR=16,pT=26,pB=38,nb=12,lo=20,hi=80,bw=(hi-lo)/nb,bins=new Array(nb).fill(0);
+  vals.forEach(function(v){bins[clamp(Math.floor((v-lo)/bw),0,nb-1)]++;});
+  var mx=Math.max.apply(null,bins)||1;
+  x.font='11.5px Sarabun,sans-serif';
+  for(var t=0;t<=4;t++){var yy=pT+(H-pT-pB)*t/4;x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText(Math.round(mx*(1-t/4)),pL-7,yy+4);}
+  bins.forEach(function(c,i){
+    var bx=pL+(W-pL-pR)*i/nb+3,bwd=(W-pL-pR)/nb-6,bh=(H-pT-pB)*c/mx,by=H-pB-bh,mid=lo+bw*(i+.5);
+    x.fillStyle=SS.band((mid-50)/10).color;x.globalAlpha=.85;x.fillRect(bx,by,bwd,bh);x.globalAlpha=1;
+    if(c){x.fillStyle='#334155';x.font='bold 11px Sarabun,sans-serif';x.textAlign='center';x.fillText(c,bx+bwd/2,by-5);}
+    x.fillStyle='#64748b';x.font='11px Sarabun,sans-serif';x.fillText(Math.round(lo+bw*i),bx+bwd/2,H-pB+17);});
+  x.fillStyle='#1e293b';x.font='bold 12.5px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('การกระจายของ Scale Score (50 + 10θ)',pL,pT-9);}
+
+function renderItemTable(){
+  var em=(S.cal==='EM');
+  var h='<table><thead><tr><th style="text-align:left">ข้อ</th><th>N</th><th>p</th><th>r<sub>pbis</sub></th>'+
+    '<th>a</th>'+(em?'<th>SE(a)</th>':'')+'<th>b</th>'+(em?'<th>SE(b)</th>':'')+
+    '<th>มิติที่วัด</th>'+(S.gd&&S.gd.link==='MIXED'?'<th>โมเดล</th>':'')+'<th>คุณภาพ</th></tr></thead><tbody>';
+  S.ip.forEach(function(o,j){
+    var bad=o.rpb<.20||o.p<.10||o.p>.95||o.a<.4;
+    h+='<tr><td style="text-align:left;font-weight:700">'+o.name+'</td><td>'+o.n+'</td>'+
+      '<td>'+o.p.toFixed(3)+'</td><td>'+o.rpb.toFixed(3)+'</td>'+
+      '<td style="font-weight:700;color:var(--acc)">'+o.a.toFixed(3)+'</td>'+
+      (em?'<td class="se">'+(isFinite(o.seA)?o.seA.toFixed(3):'–')+'</td>':'')+
+      '<td style="font-weight:700">'+o.b.toFixed(3)+'</td>'+
+      (em?'<td class="se">'+(isFinite(o.seB)?o.seB.toFixed(3):'–')+'</td>':'')+
+      '<td style="font-size:11.5px">'+(o.attrs.length?o.attrs.join(', '):'<span style="color:var(--er)">ไม่ระบุ</span>')+'</td>'+
+      (S.gd&&S.gd.link==='MIXED'?'<td><span class="tag t-bl">'+S.gd.linkOf[j]+'</span></td>':'')+
+      '<td>'+(bad?'<span class="tag t-er">ทบทวน</span>':'<span class="tag t-ok">ใช้ได้</span>')+'</td></tr>';});
+  document.getElementById('itemTbl').innerHTML=h+'</tbody></table>';
+  document.getElementById('itemNote').innerHTML=em
+    ?'ประมาณค่าด้วย MML ผ่าน EM แบบ Bock–Aitkin (quadrature 41 จุด, prior N(0,1))'
+    :'ประมาณค่าด้วยสูตรแปลงจากสถิติคลาสสิก เหมาะกับการสำรวจเบื้องต้นเท่านั้น';}
+
+/* ==========================================================
+   RENDER — G-DINA
+========================================================== */
+function renderGDINA(){
+  var host=document.getElementById('gdWrap');
+  if(!S.gd){host.innerHTML='<div class="msg m-wn">ไม่ได้เปิดใช้งานโมดูล G-DINA</div>';return;}
+  var G=S.gd,BT=(S.boot&&S.boot.items)?S.boot:null;
+  var h='<div class="kpi">'+
+    '<div><b>'+G.C+'</b><span>คลาสแฝง (2^'+G.K+')</span></div>'+
+    '<div><b style="font-size:15px">'+(G.link==='MIXED'?'ผสมรายข้อ':G.link)+'</b><span>ฟังก์ชันเชื่อมโยง</span></div>'+
+    '<div><b style="font-size:15px">'+(G.struc==='HO'?'Higher-Order':'Saturated')+'</b><span>โครงสร้าง</span></div>'+
+    '<div><b>'+G.npar+'</b><span>พารามิเตอร์รวม</span></div>'+
+    '<div><b>'+G.bic.toFixed(1)+'</b><span>BIC</span></div>'+
+    '<div><b>'+(G.accAttr*100).toFixed(1)+'%</b><span>ความแม่นรายมิติ (in-sample)</span></div>'+
+    '<div><b>'+(G.accPattern*100).toFixed(1)+'%</b><span>ความแม่นรายโปรไฟล์</span></div>'+
+    (S.cv?'<div><b style="color:var(--tl)">'+(S.cv.avg.Pa*100).toFixed(1)+'%</b><span>ความแม่นรายมิติ (CV)</span></div>'
+        :(BT?'<div><b style="color:var(--bl)">'+BT.B+'</b><span>รอบ BOOTSTRAP</span></div>':''))+'</div>';
+  if(G.struc==='HO'){
+    var LB=BT&&BT.lam;
+    h+='<h4>🏗 พารามิเตอร์โมเดลลำดับสูง</h4><table><thead><tr><th style="text-align:left">มิติ</th>'+
+      '<th>λ<sub>1k</sub></th><th>SE เชิงเส้นกำกับ</th>'+(LB?'<th>SE bootstrap</th>':'')+
+      '<th>b<sub>k</sub></th><th>SE</th><th>สัดส่วนผู้รอบรู้</th>'+(BT?'<th>SE</th>':'')+'</tr></thead><tbody>';
+    G.lam.forEach(function(o,k){
+      h+='<tr><td style="text-align:left;font-weight:700">'+S.attrNames[k]+'</td>'+
+        '<td style="font-weight:700;color:var(--acc)">'+o.a.toFixed(3)+'</td>'+
+        '<td class="se">'+(isFinite(o.seA)?o.seA.toFixed(3):'–')+'</td>'+
+        (LB?'<td style="color:var(--bl);font-weight:700">'+LB[k].aSE.toFixed(3)+'</td>':'')+
+        '<td style="font-weight:700">'+o.b.toFixed(3)+'</td>'+
+        '<td class="se">'+(isFinite(o.seB)?o.seB.toFixed(3):'–')+'</td>'+
+        '<td style="font-weight:700">'+(G.prevalence[k]*100).toFixed(1)+'%</td>'+
+        (BT?'<td class="se">±'+(BT.prev[k].se*100).toFixed(2)+'%</td>':'')+'</tr>';});
+    h+='</tbody></table>';}
+  h+='<h4>📊 สัดส่วนผู้รอบรู้รายมิติ</h4><canvas id="cvPrev" height="230"></canvas>';
+  h+='<h4>🔧 พารามิเตอร์ข้อสอบเชิงวินิจฉัย</h4><div class="scroll"><table><thead><tr>'+
+    '<th style="text-align:left">ข้อ</th><th>K<sub>j</sub></th><th>มิติ</th><th>โมเดล</th>'+
+    '<th>g</th>'+(BT?'<th>SE</th>':'')+'<th>1−s</th><th>δ<sub>j</sub></th>'+
+    (BT?'<th>SE</th><th>95% CI</th>':'')+'<th>Mono.</th><th>คุณภาพ</th></tr></thead><tbody>';
+  G.items.forEach(function(o,j){
+    var q=o.nreq===0?'<span class="tag t-wn">ไม่มี Q</span>'
+      :(o.delta>=.40?'<span class="tag t-ok">ดีมาก</span>'
+      :(o.delta>=.20?'<span class="tag t-wn">พอใช้</span>':'<span class="tag t-er">ทบทวน</span>'));
+    var bi=BT?BT.items[j]:null;
+    h+='<tr><td style="text-align:left;font-weight:700">'+o.name+'</td><td>'+o.nreq+'</td>'+
+      '<td style="font-size:11.5px">'+(o.req.length?o.req.join(', '):'–')+'</td>'+
+      '<td><span class="tag t-bl">'+o.link+'</span></td>'+
+      '<td>'+o.g.toFixed(3)+'</td>'+(bi?'<td class="se">'+bi.g.se.toFixed(3)+'</td>':'')+
+      '<td>'+o.p1.toFixed(3)+'</td>'+
+      '<td style="font-weight:800;color:var(--acc)">'+(o.nreq?o.delta.toFixed(3):'–')+'</td>'+
+      (bi?'<td class="se">'+bi.delta.se.toFixed(3)+'</td><td class="se">'+
+        bi.delta.lo.toFixed(3)+' – '+bi.delta.hi.toFixed(3)+'</td>':'')+
+      '<td>'+(o.vio?'<span class="tag t-er">'+o.vio+'</span>':'<span class="tag t-ok">✓</span>')+'</td>'+
+      '<td>'+q+'</td></tr>';});
+  h+='</tbody></table></div>';
+  h+='<h4>🧬 โปรไฟล์แฝง 14 อันดับแรก</h4><div class="scroll" style="max-height:320px">'+
+    '<table><thead><tr><th>อันดับ</th><th style="text-align:left">α</th><th>รอบรู้</th>'+
+    '<th>π<sub>c</sub></th><th>ประมาณจำนวนคน</th></tr></thead><tbody>';
+  G.classes.forEach(function(o,i){
+    h+='<tr><td>'+(i+1)+'</td><td class="mono" style="text-align:left">['+o.a.join(' ')+']</td>'+
+      '<td>'+popcount(o.c)+' / '+G.K+'</td><td style="font-weight:700">'+o.pi.toFixed(4)+'</td>'+
+      '<td>'+(o.pi*S.students.length).toFixed(1)+'</td></tr>';});
+  h+='</tbody></table></div>';
+  host.innerHTML=h;drawPrev('cvPrev');}
+
+function drawPrev(id){
+  var cv=document.getElementById(id);if(!cv||!S.gd)return;
+  var v=S.gd.prevalence,K=v.length,BT=(S.boot&&S.boot.prev)?S.boot.prev:null;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=230;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=48,pR=16,pT=22,pB=44;x.font='11.5px Sarabun,sans-serif';
+  for(var t=0;t<=5;t++){var yy=pT+(H-pT-pB)*t/5;x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText(((1-t/5)*100).toFixed(0)+'%',pL-7,yy+4);}
+  v.forEach(function(p,i){
+    var bx=pL+(W-pL-pR)*i/K+10,bw=(W-pL-pR)/K-20,bh=(H-pT-pB)*p,by=H-pB-bh;
+    x.fillStyle=p>=.6?'#059669':(p>=.4?'#d97706':'#e11d48');x.globalAlpha=.88;
+    x.fillRect(bx,by,bw,bh);x.globalAlpha=1;
+    if(BT){var lo=H-pB-(H-pT-pB)*BT[i].lo,hi2=H-pB-(H-pT-pB)*BT[i].hi;
+      x.strokeStyle='#1e293b';x.lineWidth=2;x.beginPath();
+      x.moveTo(bx+bw/2,lo);x.lineTo(bx+bw/2,hi2);x.stroke();
+      x.beginPath();x.moveTo(bx+bw/2-6,hi2);x.lineTo(bx+bw/2+6,hi2);
+      x.moveTo(bx+bw/2-6,lo);x.lineTo(bx+bw/2+6,lo);x.stroke();}
+    x.fillStyle='#334155';x.font='bold 11.5px Sarabun,sans-serif';x.textAlign='center';
+    x.fillText((p*100).toFixed(1)+'%',bx+bw/2,by-(BT?18:6));
+    x.font='11.5px Sarabun,sans-serif';x.fillStyle='#475569';x.fillText(S.attrNames[i],bx+bw/2,H-pB+18);});}
+
+/* ==========================================================
+   RENDER — Q VALIDATION
+========================================================== */
+function renderQV(){
+  var host=document.getElementById('qvWrap');
+  if(!S.qv){host.innerHTML='<div class="msg m-wn">ไม่ได้เปิดใช้งานการตรวจสอบ Q-Matrix</div>';return;}
+  var V=S.qv,K=V.K,H=S.qvHist;
+  var h='<div class="kpi">'+
+    '<div><b>'+V.eps.toFixed(2)+'</b><span>ค่าตัด PVAF (ε)</span></div>'+
+    '<div><b style="color:'+(V.nFlag?'var(--er)':'var(--ok)')+'">'+V.nFlag+'</b><span>ข้อที่ยังไม่สอดคล้อง</span></div>'+
+    '<div><b>'+(V.rows.length-V.nFlag)+'</b><span>ข้อที่สอดคล้อง</span></div>'+
+    '<div><b>'+(isFinite(V.meanProv)?V.meanProv.toFixed(3):'–')+'</b><span>PVAF เฉลี่ย</span></div>'+
+    (H?'<div><b>'+H.nRounds+'</b><span>รอบการวนซ้ำ</span></div>'+
+       '<div><b>'+H.changed+'</b><span>เซลล์ที่เปลี่ยน</span></div>':'')+'</div>';
+  if(H){
+    h+='<div class="msg '+(H.status.indexOf('ลู่เข้า')===0?'m-ok':'m-wn')+'">🔁 '+H.status+
+      ' · เลือกรอบที่ <b>'+H.pick+'</b> ตามเกณฑ์ '+H.mode+'</div>';
+    h+='<table><thead><tr><th>รอบ</th><th>ข้อที่ยังไม่สอดคล้อง</th><th>พารามิเตอร์</th>'+
+      '<th>−2LL</th><th>AIC</th><th>BIC</th><th>ΔBIC</th><th>ความแม่นรายมิติ</th><th>สถานะ</th></tr></thead><tbody>';
+    H.rounds.forEach(function(r,i){
+      var d=i?r.bic-H.rounds[i-1].bic:NaN;
+      h+='<tr'+(r.best?' class="best"':'')+'><td style="font-weight:700">'+r.r+'</td>'+
+        '<td style="color:'+(r.nch?'var(--er)':'var(--ok)')+';font-weight:700">'+r.nch+'</td>'+
+        '<td>'+r.npar+'</td><td>'+(-2*r.ll).toFixed(2)+'</td><td>'+r.aic.toFixed(2)+'</td>'+
+        '<td style="font-weight:800">'+r.bic.toFixed(2)+'</td>'+
+        '<td style="color:'+(isFinite(d)?(d<0?'var(--ok)':'var(--er)'):'var(--mut)')+'">'+
+          (isFinite(d)?(d>0?'+':'')+d.toFixed(2):'–')+'</td>'+
+        '<td>'+(r.acc*100).toFixed(1)+'%</td>'+
+        '<td>'+(r.best?'<span class="tag t-ok">เลือกใช้</span>':'<span class="tag t-ac">–</span>')+'</td></tr>';});
+    h+='</tbody></table><canvas id="cvBic" height="230" style="margin-top:10px"></canvas><div class="sep"></div>';}
+  h+='<div class="row" style="margin-bottom:12px">'+
+    '<button class="gh sm" onclick="dlFinalQ()">⬇ Q ที่ใช้จริง</button>'+
+    '<button class="gh sm" onclick="dlSuggestedQ()">⬇ Q ที่แนะนำ</button>'+
+    (V.nFlag?'<button class="wn sm" onclick="applySuggestedQ()">🔁 ใช้ Q ที่แนะนำแล้ววิเคราะห์ซ้ำ</button>':'')+
+    (keyQ(S.Q)!==keyQ(S.Qorig)?'<button class="gh sm" onclick="revertQ()">↩ ย้อนกลับ Q เดิม</button>':'')+'</div>';
+  h+='<canvas id="cvPvaf" height="240"></canvas>';
+  h+='<div class="scroll"><table><thead><tr><th style="text-align:left">ข้อ</th><th>q ที่ใช้อยู่</th>'+
+    '<th>PVAF</th><th>q ที่แนะนำ</th><th>PVAF</th><th>ΔPVAF</th><th>q เดิม</th><th>ผล</th></tr></thead><tbody>';
+  V.rows.forEach(function(o,j){
+    var om=maskOf(S.Qorig[j]),chg=(om!==o.prov);
+    if(o.degenerate){h+='<tr><td style="text-align:left;font-weight:700">'+o.name+'</td>'+
+      '<td class="mono">['+qstr(o.prov,K)+']</td><td colspan="5" style="color:var(--mut)">แทบไม่มีอำนาจจำแนก</td>'+
+      '<td><span class="tag t-er">ตรวจสอบ</span></td></tr>';return;}
+    var stg=o.ok?'<span class="tag t-ok">สอดคล้อง</span>'
+      :(popcount(o.sugg)>popcount(o.prov)?'<span class="tag t-wn">ควรเพิ่มมิติ</span>'
+      :(popcount(o.sugg)<popcount(o.prov)?'<span class="tag t-ac">ควรลดมิติ</span>'
+      :'<span class="tag t-er">ควรเปลี่ยนมิติ</span>'));
+    h+='<tr'+(o.ok?'':' class="hl"')+'><td style="text-align:left;font-weight:700">'+o.name+'</td>'+
+      '<td class="mono">['+qstr(o.prov,K)+']</td>'+
+      '<td style="font-weight:700;color:'+(o.provP>=V.eps?'var(--ok)':'var(--er)')+'">'+o.provP.toFixed(4)+'</td>'+
+      '<td class="mono" style="font-weight:800">['+qstr(o.sugg,K)+']</td>'+
+      '<td>'+o.suggP.toFixed(4)+'</td><td class="se">'+(o.delta>0?'+':'')+o.delta.toFixed(4)+'</td>'+
+      '<td class="mono" style="color:'+(chg?'var(--wn)':'var(--mut)')+'">['+qstr(om,K)+']</td>'+
+      '<td>'+stg+'</td></tr>';});
+  h+='</tbody></table></div>';
+  host.innerHTML=h;drawPVAF('cvPvaf');if(H)drawBIC('cvBic');}
+
+function drawPVAF(id){
+  var cv=document.getElementById(id);if(!cv||!S.qv)return;
+  var rows=S.qv.rows,J=rows.length,dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=240;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=48,pR=16,pT=22,pB=48;x.font='11.5px Sarabun,sans-serif';
+  for(var t=0;t<=5;t++){var yy=pT+(H-pT-pB)*t/5;x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText((1-t/5).toFixed(1),pL-7,yy+4);}
+  var ey=pT+(H-pT-pB)*(1-S.qv.eps);
+  x.strokeStyle='#e11d48';x.lineWidth=2;x.setLineDash([7,5]);
+  x.beginPath();x.moveTo(pL,ey);x.lineTo(W-pR,ey);x.stroke();x.setLineDash([]);
+  x.fillStyle='#e11d48';x.font='bold 11px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('ε = '+S.qv.eps.toFixed(2),pL+4,ey-5);
+  var bwAll=(W-pL-pR)/J;
+  rows.forEach(function(o,i){
+    var v=isFinite(o.provP)?o.provP:0,bx=pL+bwAll*i+bwAll*.18,bw=bwAll*.64,
+        bh=(H-pT-pB)*v,by=H-pB-bh;
+    x.fillStyle=o.degenerate?'#94a3b8':(o.ok?'#059669':'#e11d48');
+    x.globalAlpha=.88;x.fillRect(bx,by,bw,bh);x.globalAlpha=1;
+    if(bwAll>26){x.save();x.translate(bx+bw/2,H-pB+8);x.rotate(-Math.PI/4);
+      x.fillStyle='#475569';x.font='10.5px Sarabun,sans-serif';x.textAlign='right';
+      x.fillText(o.name,0,0);x.restore();}});
+  x.fillStyle='#1e293b';x.font='bold 12.5px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('PVAF ของเวกเตอร์ q ที่ใช้อยู่',pL,pT-8);}
+
+function drawBIC(id){
+  var cv=document.getElementById(id);if(!cv||!S.qvHist)return;
+  var R=S.qvHist.rounds,n=R.length,dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=230;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=72,pR=54,pT=26,pB=40;
+  var vals=R.map(function(r){return r.bic;}),mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);
+  var pad=Math.max((mx-mn)*.18,1);mn-=pad;mx+=pad;
+  function Y(v){return pT+(H-pT-pB)*(1-(v-mn)/(mx-mn));}
+  function X(i){return n>1?pL+(W-pL-pR)*i/(n-1):(pL+W-pR)/2;}
+  x.font='11.5px Sarabun,sans-serif';
+  for(var t=0;t<=4;t++){var vv=mn+(mx-mn)*t/4,yy=Y(vv);x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText(vv.toFixed(0),pL-7,yy+4);}
+  x.strokeStyle='#7c3aed';x.lineWidth=3;x.beginPath();
+  R.forEach(function(r,i){i?x.lineTo(X(i),Y(r.bic)):x.moveTo(X(i),Y(r.bic));});x.stroke();
+  R.forEach(function(r,i){
+    x.fillStyle=r.best?'#059669':'#7c3aed';x.beginPath();x.arc(X(i),Y(r.bic),r.best?9:6,0,6.2832);x.fill();
+    x.fillStyle='#334155';x.font='bold 10.5px Sarabun,sans-serif';x.textAlign='center';
+    x.fillText(r.bic.toFixed(0),X(i),Y(r.bic)-14);
+    x.fillStyle='#475569';x.font='11px Sarabun,sans-serif';x.fillText('รอบ '+r.r,X(i),H-pB+18);});
+  x.fillStyle='#1e293b';x.font='bold 12.5px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('BIC รายรอบของการวนตรวจสอบ Q-Matrix',pL,pT-9);}
+
+/* ==========================================================
+   RENDER — WALD
+========================================================== */
+function pcell(t,adj,alpha){
+  if(!t||!isFinite(t.p))return '<td style="color:var(--mut)">–</td>';
+  var pv=(adj===undefined||!isFinite(adj))?t.p:adj;
+  return '<td><b>'+t.W.toFixed(2)+'</b><br><span class="se" style="color:'+
+    (pv>=alpha?'var(--ok)':'var(--er)')+'">p '+(pv<0.0001?'&lt;.0001':pv.toFixed(4))+'</span></td>';}
+
+function renderWald(){
+  var host=document.getElementById('wdWrap');
+  if(!S.wald){host.innerHTML='<div class="msg m-wn">ไม่ได้เปิดใช้งาน Wald Test</div>';return;}
+  var Wd=S.wald,BT=!!(S.boot&&S.boot.pv),tested=Wd.rows.filter(function(o){return !o.na;}).length;
+  var h='<div class="kpi">'+
+    '<div><b>'+Wd.alpha+'</b><span>ระดับนัยสำคัญ (α)</span></div>'+
+    '<div><b>'+tested+'</b><span>ข้อที่ทดสอบได้</span></div>'+
+    '<div><b>'+Wd.cnt.GDINA+'</b><span>ใช้ G-DINA เต็มรูป</span></div>'+
+    '<div><b>'+Wd.cnt.DINA+' / '+Wd.cnt.DINO+' / '+Wd.cnt.ACDM+'</b><span>DINA / DINO / ACDM</span></div>'+
+    '<div><b>'+Wd.nparSat+' → '+Wd.nparSel+'</b><span>พารามิเตอร์ข้อสอบ</span></div>'+
+    '<div><b style="color:var(--ok)">−'+Wd.saved+'</b><span>ประหยัดพารามิเตอร์</span></div>'+
+    (Wd.useBH?'<div><b style="font-size:15px">BH</b><span>ปรับค่า p แล้ว</span></div>':'')+'</div>';
+  h+='<div class="row" style="margin-bottom:12px">'+
+    (S.linkOf?'<button class="gh sm" onclick="clearMixedAndRun()">↩ กลับไปใช้โมเดลเดียว</button>'
+             :'<button class="bl sm" onclick="applyWaldModels()">⚖️ ใช้โมเดลรายข้อที่เลือก</button>')+
+    (BT&&Wd.selB?'<button class="bl sm" onclick="applyWaldBoot()">⚖️ ใช้ผลจาก bootstrap</button>':'')+
+    '<button class="gh sm" onclick="dlWald()">⬇ ดาวน์โหลดผล</button></div>';
+  h+='<div class="scroll"><table><thead><tr><th style="text-align:left" rowspan="2">ข้อ</th>'+
+    '<th rowspan="2">K<sub>j</sub></th><th colspan="3">Wald เชิงเส้นกำกับ</th>'+
+    (BT?'<th colspan="3">Wald bootstrap</th>':'')+
+    '<th rowspan="2">โมเดลที่เลือก</th><th rowspan="2">พารามิเตอร์</th></tr>'+
+    '<tr><th>DINA</th><th>DINO</th><th>ACDM</th>'+(BT?'<th>DINA</th><th>DINO</th><th>ACDM</th>':'')+'</tr></thead><tbody>';
+  Wd.rows.forEach(function(o){
+    if(o.na){h+='<tr><td style="text-align:left;font-weight:700">'+o.name+'</td><td>'+o.kj+'</td>'+
+      '<td colspan="'+(BT?6:3)+'" style="color:var(--mut)">'+o.na+'</td>'+
+      '<td><span class="tag t-bl">'+(o.sel||'GDINA')+'</span></td><td>'+(o.npS||1)+' → '+(o.npL||1)+'</td></tr>';return;}
+    var A=o.padj||{},Bp=o.padjB||{},selShow=BT?(o.selB||o.sel):o.sel;
+    h+='<tr'+(selShow==='GDINA'?'':' class="hl"')+'><td style="text-align:left;font-weight:700">'+o.name+
+      (o.low?' <span style="color:var(--wn)">•</span>':'')+'</td><td>'+o.kj+'</td>'+
+      pcell(o.dina,A.DINA,Wd.alpha)+pcell(o.dino,A.DINO,Wd.alpha)+pcell(o.acdm,A.ACDM,Wd.alpha)+
+      (BT?(o.bootFail?'<td colspan="3" class="se">replicate ไม่พอ</td>'
+        :pcell(o.dinaB,Bp.DINA,Wd.alpha)+pcell(o.dinoB,Bp.DINO,Wd.alpha)+pcell(o.acdmB,Bp.ACDM,Wd.alpha)):'')+
+      '<td><span class="tag '+(selShow==='GDINA'?'t-ac':'t-bl')+'">'+selShow+'</span>'+
+        (BT&&o.selB&&o.selB!==o.sel?'<br><span class="se">เดิม: '+o.sel+'</span>':'')+'</td>'+
+      '<td style="font-weight:700">'+o.npS+' → '+(BT&&o.npLB!==undefined?o.npLB:o.npL)+'</td></tr>';});
+  h+='</tbody></table></div>';
+  if(S.cv&&S.cv.reselect)h+='<div class="msg m-tl">🔀 ดูความคงทนของการเลือกโมเดลข้ามชุดข้อมูลได้ในแท็บ '+
+    '“Cross-Validation” ซึ่งแสดงว่าแต่ละข้อถูกเลือกเป็นโมเดลใดกี่ครั้งจาก '+S.cv.nSplit+' ชุด</div>';
+  host.innerHTML=h;}
+
+function applyWaldModels(){if(!S.wald)return;
+  S.linkOf=S.wald.sel.slice();document.getElementById('mBadge').classList.remove('hide');runAnalysis();}
+function applyWaldBoot(){if(!S.wald||!S.wald.selB)return;
+  S.linkOf=S.wald.selB.slice();document.getElementById('mBadge').classList.remove('hide');runAnalysis();}
+function clearMixedAndRun(){clearMixed();runAnalysis();}
+function dlWald(){
+  if(!S.wald)return;var bt=!!(S.boot&&S.boot.pv);
+  var t='Item,Kj,W_DINA,p_DINA,W_DINO,p_DINO,W_ACDM,p_ACDM,Selected'+
+    (bt?',Selected_boot':'')+',npar_sat,npar_sel\n';
+  S.wald.rows.forEach(function(o){
+    if(o.na){t+=o.name+','+o.kj+',,,,,,,'+(o.sel||'GDINA')+(bt?','+(o.sel||'GDINA'):'')+
+      ','+(o.npS||1)+','+(o.npL||1)+'\n';return;}
+    t+=o.name+','+o.kj+','+f4(o.dina.W)+','+f4(o.dina.p)+','+f4(o.dino.W)+','+f4(o.dino.p)+','+
+      f4(o.acdm.W)+','+f4(o.acdm.p)+','+o.sel+(bt?','+(o.selB||''):'')+','+o.npS+','+o.npL+'\n';});
+  dl('wald_test_'+Date.now()+'.csv',t);}
+
+/* ==========================================================
+   RENDER — ABSOLUTE FIT
+========================================================== */
+function verdict(ok,warnLvl){
+  return ok?'<span class="tag t-ok">ผ่านเกณฑ์</span>'
+    :(warnLvl?'<span class="tag t-wn">ก้ำกึ่ง</span>':'<span class="tag t-er">ไม่ผ่าน</span>');}
+
+function renderAF(){
+  var host=document.getElementById('afWrap');
+  if(!S.af){host.innerHTML='<div class="msg m-wn">ไม่ได้เปิดใช้งานการคำนวณความกลมกลืนสัมบูรณ์</div>';return;}
+  var A=S.af,B=S.boot,J=S.Q.length;
+  function pb(k){return B?B.fit[k]:null;}
+  var sr=pb('srmsr'),mc=pb('madcor'),ml=pb('madlor'),ch=pb('maxChi'),mz=pb('maxZ');
+  var h='<div class="kpi">'+
+    '<div><b style="color:'+(A.srmsr<=.05?'var(--ok)':(A.srmsr<=.08?'var(--wn)':'var(--er)'))+'">'+
+      A.srmsr.toFixed(4)+'</b><span>SRMSR</span></div>'+
+    '<div><b>'+A.madcor.toFixed(4)+'</b><span>MADcor</span></div>'+
+    '<div><b>'+A.madlor.toFixed(4)+'</b><span>MAD log-odds ratio</span></div>'+
+    '<div><b>'+A.maxChi.toFixed(2)+'</b><span>MAX χ² ของคู่ข้อ</span></div>'+
+    '<div><b>'+A.maxZ.toFixed(2)+'</b><span>MAX |z|</span></div>'+
+    '<div><b>'+A.nPairs+'</b><span>จำนวนคู่ข้อสอบ</span></div>'+
+    (B?'<div><b style="color:var(--bl)">'+B.B+'</b><span>รอบ BOOTSTRAP</span></div>':'')+
+    (S.cv?'<div><b style="color:var(--tl)">'+S.cv.avg.srmsrVal.toFixed(4)+'</b><span>SRMSR นอกกลุ่ม (CV)</span></div>':'')+'</div>';
+  if(!B)h+='<div class="msg m-wn">⚠️ ยังไม่ได้ทำ parametric bootstrap — ค่า p ที่แสดงเป็นแบบ Bonferroni '+
+    'ซึ่งอนุรักษ์นิยมเกินจริง เปิดตัวเลือก Bootstrap เพื่อให้ได้ค่า p ที่ถูกต้อง</div>';
+  h+='<h4>🎯 สรุปผลการทดสอบ</h4><table><thead><tr><th style="text-align:left">ดัชนี</th><th>ค่าที่สังเกตได้</th>'+
+    (B?'<th>ค่าเฉลี่ยจำลอง</th><th>ช่วง 95%</th><th>bootstrap p</th>':'<th>p (Bonferroni)</th>')+
+    '<th>เกณฑ์</th><th>ข้อสรุป</th></tr></thead><tbody>';
+  function rowAF(n,obs,st,crit,ok,wl,bonf){
+    return '<tr><td style="text-align:left;font-weight:700">'+n+'</td>'+
+      '<td style="font-weight:800;color:var(--acc)">'+obs+'</td>'+
+      (B?'<td>'+st.m.toFixed(4)+'</td><td class="se">'+st.lo.toFixed(4)+' – '+st.hi.toFixed(4)+'</td>'+
+        '<td style="font-weight:800;color:'+(st.p>=.05?'var(--ok)':'var(--er)')+'">'+st.p.toFixed(3)+'</td>'
+       :'<td>'+(bonf===undefined?'–':(bonf<.0001?'&lt;.0001':bonf.toFixed(4)))+'</td>')+
+      '<td class="se">'+crit+'</td><td>'+verdict(ok,wl)+'</td></tr>';}
+  h+=rowAF('SRMSR',A.srmsr.toFixed(4),sr,'≤ .05',B?sr.p>=.05:A.srmsr<=.05,B?false:A.srmsr<=.08);
+  h+=rowAF('MADcor',A.madcor.toFixed(4),mc,'≤ .04',B?mc.p>=.05:A.madcor<=.04,B?false:A.madcor<=.06);
+  h+=rowAF('MAD log-OR',A.madlor.toFixed(4),ml,'ยิ่งต่ำยิ่งดี',B?ml.p>=.05:true,!B);
+  h+=rowAF('max χ²',A.maxChi.toFixed(3),ch,'เทียบการแจกแจงจำลอง',B?ch.p>=.05:A.pChiBonf>=.05,false,A.pChiBonf);
+  h+=rowAF('max |z|',A.maxZ.toFixed(3),mz,'เทียบการแจกแจงจำลอง',B?mz.p>=.05:A.pZBonf>=.05,false,A.pZBonf);
+  h+='</tbody></table>';
+  if(B)h+='<h4>📊 การแจกแจงของสถิติจากการจำลอง</h4><canvas id="cvBoot" height="250"></canvas>';
+  h+='<h4>🔥 เศษเหลือของสหสัมพันธ์ระหว่างข้อสอบ</h4>'+
+    '<canvas id="cvResid" height="'+Math.min(560,Math.max(260,J*20+70))+'"></canvas>'+
+    '<p class="note">สีแดง = โมเดลประเมินความสัมพันธ์ต่ำเกินไป (มักหมายถึงมิติที่ยังไม่ระบุใน Q หรือ local dependence) '+
+    '· สีน้ำเงิน = ประเมินสูงเกินไป</p>';
+  var worst=A.pairs.slice().sort(function(a,b){return b.chi-a.chi;}).slice(0,15);
+  h+='<h4>⚠️ คู่ข้อสอบที่เศษเหลือสูงสุด 15 อันดับ</h4><div class="scroll"><table><thead><tr>'+
+    '<th>อันดับ</th><th style="text-align:left">คู่ข้อสอบ</th><th>มิติร่วม</th><th>N</th>'+
+    '<th>r สังเกต</th><th>r โมเดล</th><th>เศษเหลือ</th><th>χ²</th><th>|z|</th></tr></thead><tbody>';
+  worst.forEach(function(o,i){
+    var sh=[],K=S.attrNames.length;
+    for(var k=0;k<K;k++)if(S.Q[o.a][k]===1&&S.Q[o.b][k]===1)sh.push(S.attrNames[k]);
+    var crit=B?(o.chi>=B.fit.maxChi.q95):(o.chi>3.841);
+    h+='<tr'+(crit?' class="hl"':'')+'><td>'+(i+1)+'</td>'+
+      '<td style="text-align:left;font-weight:700">'+S.itemNames[o.a]+' ↔ '+S.itemNames[o.b]+'</td>'+
+      '<td style="font-size:11.5px">'+(sh.length?sh.join(', '):'<span class="tag t-wn">ไม่มี</span>')+'</td>'+
+      '<td>'+o.n+'</td><td>'+o.robs.toFixed(4)+'</td><td>'+o.rexp.toFixed(4)+'</td>'+
+      '<td style="font-weight:800;color:'+(o.d>0?'var(--er)':'var(--bl)')+'">'+(o.d>0?'+':'')+o.d.toFixed(4)+'</td>'+
+      '<td style="font-weight:700">'+o.chi.toFixed(2)+'</td><td>'+o.z.toFixed(2)+'</td></tr>';});
+  h+='</tbody></table></div>';
+  host.innerHTML=h;drawResid('cvResid');if(B)drawBootDist('cvBoot');}
+
+function drawResid(id){
+  var cv=document.getElementById(id);if(!cv||!S.af)return;
+  var J=S.Q.length,dpr=window.devicePixelRatio||1,W=cv.clientWidth||900;
+  var pad=62,cell=Math.max(9,Math.min(28,(W-pad-20)/J)),H=pad+cell*J+16;
+  cv.height=H*dpr;cv.width=W*dpr;cv.style.height=H+'px';
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var mx=0;S.af.pairs.forEach(function(o){mx=Math.max(mx,Math.abs(o.d));});mx=Math.max(mx,.02);
+  var M={};S.af.pairs.forEach(function(o){M[o.a+'_'+o.b]=o.d;M[o.b+'_'+o.a]=o.d;});
+  for(var a=0;a<J;a++)for(var b=0;b<J;b++){
+    var px=pad+b*cell,py=pad+a*cell;
+    if(a===b){x.fillStyle='#e2e8f0';x.fillRect(px,py,cell-1,cell-1);continue;}
+    var d=M[a+'_'+b];
+    if(d===undefined){x.fillStyle='#f1f5f9';x.fillRect(px,py,cell-1,cell-1);continue;}
+    var t=clamp(Math.abs(d)/mx,0,1),al=.12+.88*t;
+    x.fillStyle=d>0?'rgba(225,29,72,'+al+')':'rgba(2,132,199,'+al+')';
+    x.fillRect(px,py,cell-1,cell-1);}
+  if(cell>=13){x.font=(cell>=18?'10.5px':'9px')+' Sarabun,sans-serif';x.fillStyle='#475569';
+    for(var i=0;i<J;i++){
+      x.textAlign='right';x.fillText(S.itemNames[i],pad-5,pad+i*cell+cell*.72);
+      x.save();x.translate(pad+i*cell+cell*.72,pad-6);x.rotate(-Math.PI/2);
+      x.textAlign='left';x.fillText(S.itemNames[i],0,0);x.restore();}}
+  x.fillStyle='#1e293b';x.font='bold 12px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('เศษเหลือ r(สังเกต) − r(โมเดล) · เข้มสุด = ±'+mx.toFixed(2),10,18);}
+
+function drawBootDist(id){
+  var cv=document.getElementById(id);if(!cv||!S.boot)return;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=250;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var keys=[{k:'srmsr',n:'SRMSR'},{k:'madcor',n:'MADcor'},{k:'maxChi',n:'max χ²'},{k:'maxZ',n:'max |z|'}];
+  if(S.boot.m2)keys.push({k:'m2',n:'M₂'});
+  var cw=W/keys.length,pT=30,pB=34;
+  keys.forEach(function(o,ci){
+    var st=(o.k==='m2')?S.boot.m2:S.boot.fit[o.k],x0=ci*cw+18,wd=cw-36;
+    var lo=Math.min(st.lo,st.obs)*.96,hi=Math.max(st.hi,st.obs)*1.04;
+    if(!(hi>lo))hi=lo+1;
+    x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(x0,H-pB);x.lineTo(x0+wd,H-pB);x.stroke();
+    var q1=(st.lo-lo)/(hi-lo),q2=(st.hi-lo)/(hi-lo),mm=(st.m-lo)/(hi-lo),ob=(st.obs-lo)/(hi-lo);
+    x.fillStyle='rgba(124,58,237,.20)';x.fillRect(x0+wd*q1,pT+14,wd*(q2-q1),H-pB-pT-24);
+    x.strokeStyle='#7c3aed';x.lineWidth=2;
+    x.beginPath();x.moveTo(x0+wd*mm,pT+10);x.lineTo(x0+wd*mm,H-pB-4);x.stroke();
+    var okc=st.p>=.05;
+    x.strokeStyle=okc?'#059669':'#e11d48';x.lineWidth=3;
+    x.beginPath();x.moveTo(x0+wd*clamp(ob,0,1),pT+4);x.lineTo(x0+wd*clamp(ob,0,1),H-pB+6);x.stroke();
+    x.fillStyle=okc?'#059669':'#e11d48';x.font='bold 10.5px Sarabun,sans-serif';x.textAlign='center';
+    x.fillText('obs '+st.obs.toFixed(3),x0+wd*clamp(ob,0,1),pT-4);
+    x.fillStyle='#334155';x.font='bold 12px Sarabun,sans-serif';x.fillText(o.n,x0+wd/2,H-pB+22);
+    x.fillStyle=okc?'#059669':'#e11d48';x.font='11px Sarabun,sans-serif';
+    x.fillText('p = '+st.p.toFixed(3),x0+wd/2,H-pB+36);});
+  x.fillStyle='#1e293b';x.font='bold 12px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('แถบม่วง = ช่วง 95% ของค่าจำลอง · เส้นหนา = ค่าที่สังเกตได้จริง',12,14);}
+
+/* ==========================================================
+   RENDER — M₂ / RMSEA₂
+========================================================== */
+function rmseaVerdict(r){
+  if(!isFinite(r))return{t:'ไม่ระบุ',c:'t-wn'};
+  if(r<=.05)return{t:'กลมกลืนดี (close fit)',c:'t-ok'};
+  if(r<=.08)return{t:'ยอมรับได้ (fair fit)',c:'t-wn'};
+  if(r<=.10)return{t:'ก้ำกึ่ง (mediocre)',c:'t-wn'};
+  return{t:'ไม่กลมกลืน (poor fit)',c:'t-er'};}
+
+function renderM2(){
+  var host=document.getElementById('m2Wrap');
+  if(!S.m2){host.innerHTML='<div class="msg m-wn">ไม่ได้เปิดใช้งานการคำนวณ M₂ ในรอบนี้</div>';return;}
+  if(S.m2.err){host.innerHTML='<div class="msg m-er">❌ ไม่สามารถคำนวณ M₂ ได้ — '+S.m2.err+
+    '<br><span class="se">M₂ ต้องการให้จำนวนโมเมนต์อันดับ 1 และ 2 มากกว่าจำนวนพารามิเตอร์อิสระ '+
+    'หากแบบทดสอบสั้นมากหรือโมเดลมีพารามิเตอร์เยอะเกินไป องศาอิสระจะหมดลง</span></div>';return;}
+  var M=S.m2,v=rmseaVerdict(M.rmsea),B=(S.boot&&S.boot.m2)?S.boot.m2:null;
+  var h='<div class="kpi">'+
+    '<div><b>'+M.M2.toFixed(2)+'</b><span>M₂</span></div>'+
+    '<div><b>'+M.df+'</b><span>องศาอิสระ</span></div>'+
+    '<div><b style="color:'+(M.p>=.05?'var(--ok)':'var(--er)')+'">'+
+      (M.p<.0001?'<.0001':M.p.toFixed(4))+'</b><span>p (เชิงเส้นกำกับ)</span></div>'+
+    '<div><b style="color:'+(M.rmsea<=.05?'var(--ok)':(M.rmsea<=.08?'var(--wn)':'var(--er)'))+'">'+
+      M.rmsea.toFixed(4)+'</b><span>RMSEA₂</span></div>'+
+    '<div><b style="font-size:14px">'+M.lo.toFixed(4)+' – '+M.hi.toFixed(4)+'</b><span>90% CI ของ RMSEA₂</span></div>'+
+    '<div><b>'+(isFinite(M.pClose)?M.pClose.toFixed(3):'–')+'</b><span>p ของ CLOSE FIT</span></div>'+
+    (isFinite(M.cfi)?'<div><b>'+M.cfi.toFixed(4)+'</b><span>CFI₂</span></div>':'')+
+    (isFinite(M.tli)?'<div><b>'+M.tli.toFixed(4)+'</b><span>TLI₂</span></div>':'')+'</div>';
+
+  h+='<div class="msg '+(M.rmsea<=.05?'m-ok':(M.rmsea<=.08?'m-wn':'m-er'))+'">'+
+    (M.rmsea<=.05?'✅':(M.rmsea<=.08?'⚠️':'❌'))+' <b>ข้อสรุป:</b> RMSEA₂ = '+M.rmsea.toFixed(4)+
+    ' [90% CI '+M.lo.toFixed(4)+', '+M.hi.toFixed(4)+'] จัดอยู่ในระดับ <b>'+v.t+'</b> · '+
+    (M.hi<=.05?'ขอบบนของช่วงความเชื่อมั่นยังต่ำกว่า .05 จึงสรุปได้อย่างมั่นใจว่าโมเดลกลมกลืนใกล้เคียงกับข้อมูล'
+     :(M.lo>=.10?'ขอบล่างของช่วงความเชื่อมั่นสูงกว่า .10 จึงสรุปได้อย่างมั่นใจว่าโมเดลไม่กลมกลืน'
+     :'ช่วงความเชื่อมั่นคร่อมเกณฑ์สำคัญ จึงยังสรุปไม่ได้ชัดเจน ควรพิจารณาดัชนีอื่นและขนาดกลุ่มตัวอย่างประกอบ'))+'</div>';
+
+  h+='<h4>📐 รายละเอียดการคำนวณ</h4><table><thead><tr><th style="text-align:left">รายการ</th>'+
+    '<th>ค่า</th><th style="text-align:left">คำอธิบาย</th></tr></thead><tbody>'+
+    '<tr><td class="l" style="text-align:left;font-weight:700">จำนวนโมเมนต์ (s)</td><td style="font-weight:800">'+M.s+'</td>'+
+      '<td style="text-align:left" class="se">J + J(J−1)/2 = '+S.Q.length+' + '+(M.s-S.Q.length)+' '+
+      '(สัดส่วนตอบถูกรายข้อ + สัดส่วนตอบถูกร่วมของทุกคู่ข้อ)</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">จำนวนพารามิเตอร์อิสระ (q)</td><td style="font-weight:800">'+M.q+'</td>'+
+      '<td style="text-align:left" class="se">พารามิเตอร์ข้อสอบตามฟังก์ชันเชื่อมโยงที่เลือก + พารามิเตอร์โครงสร้าง '+
+      (S.gd.struc==='HO'?'(Higher-Order: 2K = '+(2*S.gd.K)+')':'(Saturated: 2^K − 1 = '+(S.gd.C-1)+')')+'</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">องศาอิสระ (df)</td><td style="font-weight:800">'+M.df+'</td>'+
+      '<td style="text-align:left" class="se">s − q</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">ขนาดกลุ่มตัวอย่าง (N)</td><td style="font-weight:800">'+M.N+'</td>'+
+      '<td style="text-align:left" class="se">ใช้ในสูตร RMSEA₂ = √[max(M₂ − df, 0) / (N × df)]</td></tr>'+
+    (isFinite(M.M2B)?'<tr><td style="text-align:left;font-weight:700">โมเดลฐาน (independence)</td>'+
+      '<td style="font-weight:800">'+M.M2B.toFixed(2)+'</td>'+
+      '<td style="text-align:left" class="se">M₂ ของโมเดลที่สมมติว่าข้อสอบทุกข้อเป็นอิสระต่อกัน · df = '+M.dfB+
+      ' · ใช้เป็นฐานเปรียบเทียบสำหรับ CFI₂ และ TLI₂</td></tr>':'')+
+    '</tbody></table>';
+
+  h+='<h4>📊 ตำแหน่งของ RMSEA₂ เทียบกับเกณฑ์มาตรฐาน</h4><canvas id="cvRmsea" height="150"></canvas>';
+
+  h+='<h4>🧾 ตารางสรุปสำหรับรายงานผล</h4><table><thead><tr><th style="text-align:left">ดัชนี</th>'+
+    '<th>ค่าที่ได้</th><th>เกณฑ์ที่ยอมรับ</th><th>ผลการตัดสิน</th></tr></thead><tbody>'+
+    '<tr><td style="text-align:left;font-weight:700">M₂ (df = '+M.df+')</td>'+
+      '<td style="font-weight:800">'+M.M2.toFixed(2)+'</td><td class="se">p ≥ .05</td>'+
+      '<td>'+verdict(M.p>=.05,M.p>=.01)+'</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">RMSEA₂</td>'+
+      '<td style="font-weight:800;color:var(--acc)">'+M.rmsea.toFixed(4)+'</td>'+
+      '<td class="se">≤ .05 ดี · ≤ .08 พอรับได้</td><td><span class="tag '+v.c+'">'+v.t+'</span></td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">90% CI ของ RMSEA₂</td>'+
+      '<td style="font-weight:800">['+M.lo.toFixed(4)+', '+M.hi.toFixed(4)+']</td>'+
+      '<td class="se">ขอบบน ≤ .08</td><td>'+verdict(M.hi<=.08,M.hi<=.10)+'</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">p ของ close fit (H₀: RMSEA ≤ .05)</td>'+
+      '<td style="font-weight:800">'+(isFinite(M.pClose)?M.pClose.toFixed(4):'–')+'</td>'+
+      '<td class="se">≥ .05</td><td>'+verdict(M.pClose>=.05,M.pClose>=.01)+'</td></tr>'+
+    (isFinite(M.cfi)?'<tr><td style="text-align:left;font-weight:700">CFI₂</td>'+
+      '<td style="font-weight:800">'+M.cfi.toFixed(4)+'</td><td class="se">≥ .95</td>'+
+      '<td>'+verdict(M.cfi>=.95,M.cfi>=.90)+'</td></tr>':'')+
+    (isFinite(M.tli)?'<tr><td style="text-align:left;font-weight:700">TLI₂</td>'+
+      '<td style="font-weight:800">'+M.tli.toFixed(4)+'</td><td class="se">≥ .95</td>'+
+      '<td>'+verdict(M.tli>=.95,M.tli>=.90)+'</td></tr>':'')+
+    (S.af?'<tr><td style="text-align:left;font-weight:700">SRMSR</td>'+
+      '<td style="font-weight:800">'+S.af.srmsr.toFixed(4)+'</td><td class="se">≤ .05</td>'+
+      '<td>'+verdict(S.af.srmsr<=.05,S.af.srmsr<=.08)+'</td></tr>':'')+
+    (B?'<tr><td style="text-align:left;font-weight:700">M₂ (bootstrap p)</td>'+
+      '<td style="font-weight:800">'+B.p.toFixed(3)+'</td><td class="se">≥ .05</td>'+
+      '<td>'+verdict(B.p>=.05,false)+'</td></tr>':'')+
+    '</tbody></table>';
+
+  h+='<p class="note"><b>วิธีการ:</b> M₂ เป็นสถิติความกลมกลืนแบบ limited-information ที่ใช้เฉพาะโมเมนต์อันดับ 1 และ 2 '+
+    '(สัดส่วนตอบถูกรายข้อและสัดส่วนตอบถูกร่วมรายคู่) แทนที่จะใช้ตารางความถี่ของรูปแบบคำตอบทั้ง 2<sup>J</sup> รูปแบบ '+
+    'จึงยังคงมีการแจกแจงแบบไคสแควร์ที่เชื่อถือได้แม้ข้อสอบจะมีจำนวนมากและตารางความถี่กระจัดกระจาย '+
+    '(Maydeu-Olivares &amp; Joe, 2005, 2006; Liu, Tian &amp; Xin, 2016 สำหรับบริบท CDM)</p>'+
+    '<p class="note">M₂ = N (p − π̂)′ C₂ (p − π̂) โดย C₂ = Ξ₂⁻¹ − Ξ₂⁻¹Δ₂(Δ₂′Ξ₂⁻¹Δ₂)⁻¹Δ₂′Ξ₂⁻¹ · '+
+    'Ξ₂ คือเมทริกซ์ความแปรปรวนร่วมของโมเมนต์ซึ่งคำนวณจากโมเมนต์ร่วมสูงสุดอันดับ 4 ที่โมเดลสร้างขึ้น '+
+    'Ξ₂[A,B] = π<sub>A∪B</sub> − π<sub>A</sub>π<sub>B</sub> · Δ₂ = ∂π₂/∂θ คือเมทริกซ์จาโคเบียนที่คำนวณด้วยผลต่างกลาง '+
+    '(central difference) สำหรับพารามิเตอร์ข้อสอบและพารามิเตอร์ลำดับสูง และคำนวณเชิงวิเคราะห์สำหรับ π<sub>c</sub> '+
+    'ในโครงสร้างแบบอิ่มตัว · การหาช่วงความเชื่อมั่น 90% ของ RMSEA₂ ใช้วิธีของ Browne &amp; Cudeck โดยหาค่าพารามิเตอร์ '+
+    'นอกศูนย์กลาง λ<sub>L</sub> และ λ<sub>U</sub> ที่ทำให้ F(M₂ | df, λ) เท่ากับ .95 และ .05 ตามลำดับ '+
+    'แล้วแปลงกลับด้วย RMSEA = √[λ / (N × df)]</p>'+
+    '<p class="note"><b>ข้อควรระวัง:</b> เกณฑ์ .05 / .08 ยืมมาจากบริบทของโมเดลสมการโครงสร้างและ IRT ต่อเนื่อง '+
+    'ซึ่งงานจำลองสถานการณ์ในบริบท CDM ชี้ว่าอาจเข้มงวดเกินไปเมื่อ N ใหญ่มากและหลวมเกินไปเมื่อ N เล็ก '+
+    'จึงควรรายงานควบคู่กับ SRMSR ค่า p จาก bootstrap และผลจาก cross-validation เสมอ · '+
+    'นอกจากนี้เมื่อ N ใหญ่มาก M₂ จะมีนัยสำคัญเกือบเสมอแม้ความคลาดเคลื่อนจะเล็กน้อยจนไม่มีความหมายเชิงปฏิบัติ '+
+    'RMSEA₂ ซึ่งปรับด้วย N และ df จึงเป็นตัวชี้วัดที่เหมาะกว่าในการตัดสินใจ</p>';
+  host.innerHTML=h;drawRmsea('cvRmsea');}
+
+function drawRmsea(id){
+  var cv=document.getElementById(id);if(!cv||!S.m2||S.m2.err)return;
+  var M=S.m2,dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=150;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=40,pR=40,pT=44,y=76,mx=Math.max(.15,M.hi*1.15);
+  function X(v){return pL+(W-pL-pR)*clamp(v/mx,0,1);}
+  var zones=[{a:0,b:.05,c:'#059669',n:'ดี'},{a:.05,b:.08,c:'#d97706',n:'ยอมรับได้'},
+             {a:.08,b:.10,c:'#f97316',n:'ก้ำกึ่ง'},{a:.10,b:mx,c:'#e11d48',n:'ไม่กลมกลืน'}];
+  zones.forEach(function(z){
+    x.fillStyle=z.c;x.globalAlpha=.22;x.fillRect(X(z.a),y-16,X(z.b)-X(z.a),32);x.globalAlpha=1;
+    if(X(z.b)-X(z.a)>44){x.fillStyle=z.c;x.font='bold 11px Sarabun,sans-serif';x.textAlign='center';
+      x.fillText(z.n,(X(z.a)+X(z.b))/2,y+31);}});
+  x.strokeStyle='#94a3b8';x.lineWidth=1;x.font='10.5px Sarabun,sans-serif';x.fillStyle='#64748b';
+  [0,.05,.08,.10].forEach(function(v){
+    x.beginPath();x.moveTo(X(v),y-18);x.lineTo(X(v),y+18);x.stroke();
+    x.textAlign='center';x.fillText(v.toFixed(2),X(v),y-24);});
+  x.strokeStyle='#1e293b';x.lineWidth=4;x.lineCap='round';
+  x.beginPath();x.moveTo(X(M.lo),y);x.lineTo(X(M.hi),y);x.stroke();
+  x.lineWidth=2;
+  x.beginPath();x.moveTo(X(M.lo),y-9);x.lineTo(X(M.lo),y+9);
+  x.moveTo(X(M.hi),y-9);x.lineTo(X(M.hi),y+9);x.stroke();
+  x.fillStyle='#7c3aed';x.beginPath();x.arc(X(M.rmsea),y,9,0,6.2832);x.fill();
+  x.fillStyle='#fff';x.font='bold 9.5px Sarabun,sans-serif';x.textAlign='center';
+  x.fillText('●',X(M.rmsea),y+3);
+  x.fillStyle='#1e293b';x.font='bold 12px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('RMSEA₂ = '+M.rmsea.toFixed(4)+' · 90% CI ['+M.lo.toFixed(4)+', '+M.hi.toFixed(4)+']',pL,20);
+  x.font='11px Sarabun,sans-serif';x.fillStyle='#64748b';
+  x.fillText('เส้นดำ = ช่วงความเชื่อมั่น 90% · จุดม่วง = ค่าประมาณจุด',pL,H-10);}
+
+/* ==========================================================
+   RENDER — CROSS-VALIDATION
+========================================================== */
+function renderCV(){
+  var host=document.getElementById('cvWrap');
+  if(!S.cv){host.innerHTML='<div class="msg m-wn">ไม่ได้เปิดใช้งานโหมดแบ่งข้อมูล — '+
+    'เปิดตัวเลือก “Cross-Validation” ในแผงตั้งค่าเพื่อประเมินว่าผลการเลือก Q-Matrix และโมเดลรายข้อ '+
+    'จะยังคงอยู่กับกลุ่มตัวอย่างใหม่หรือไม่</div>';return;}
+  var V=S.cv,J=S.Q.length,K=S.attrNames.length,F=V.folds;
+  var modeTxt=V.mode==='KFOLD'?(V.k+'-fold Cross-Validation')
+    :(V.mode==='HOLDOUT'?('Holdout '+(V.prop*100).toFixed(0)+' / '+((1-V.prop)*100).toFixed(0))
+    :('Repeated Holdout '+V.nRep+' ครั้ง'));
+  var gapLL=V.avg.llCal-V.avg.llVal,gapSR=V.avg.srmsrVal-V.avg.srmsrCal,
+      gapPa=V.avg.PaIn-V.avg.Pa;
+  var h='<div class="kpi">'+
+    '<div><b style="font-size:14px">'+modeTxt+'</b><span>รูปแบบการแบ่ง</span></div>'+
+    '<div><b>'+V.nSplit+'</b><span>จำนวนชุดที่ประเมิน</span></div>'+
+    '<div><b>'+V.avg.llVal.toFixed(4)+'</b><span>CV LOG-LIK ต่อคน</span></div>'+
+    '<div><b style="color:'+(gapLL>.15?'var(--er)':(gapLL>.05?'var(--wn)':'var(--ok)'))+'">'+
+      gapLL.toFixed(4)+'</b><span>ช่องว่าง IN − OUT</span></div>'+
+    '<div><b style="color:var(--tl)">'+(V.avg.Pa*100).toFixed(1)+'%</b><span>CV ความแม่นรายมิติ</span></div>'+
+    '<div><b style="color:var(--tl)">'+(V.avg.Pc*100).toFixed(1)+'%</b><span>CV ความแม่นรายโปรไฟล์</span></div>'+
+    '<div><b>'+V.avg.srmsrVal.toFixed(4)+'</b><span>SRMSR นอกกลุ่ม</span></div>'+
+    (V.agree?'<div><b>'+(V.agree.overall?V.agree.overall.kappa.toFixed(3):'–')+
+      '</b><span>κ กับผลจากข้อมูลเต็ม</span></div>':'')+'</div>';
+
+  h+='<div class="msg '+(V.reselect?'m-tl':'m-wn')+'">'+(V.reselect?'🔀':'⚠️')+' <b>'+
+    (V.reselect?'เลือก Q-Matrix และโมเดลรายข้อใหม่ในทุกชุด':'ตรึง Q-Matrix และโมเดลจากข้อมูลเต็ม')+'</b> — '+
+    (V.reselect
+      ?'การเลือกใหม่ทุกชุดคือวิธีเดียวที่ประเมิน selection bias ได้อย่างตรงไปตรงมา เพราะความไม่แน่นอนจาก'+
+       'การตัดสินใจเลือก Q และเลือกฟังก์ชันเชื่อมโยงถูกนับรวมเข้าไปในตัวเลขที่รายงานด้วย'
+      :'โหมดนี้วัดได้เพียงความไม่แน่นอนของการประมาณพารามิเตอร์ ไม่ได้วัด selection bias '+
+       'เพราะ Q และโมเดลถูกเลือกจากข้อมูลทั้งหมดซึ่งรวมชุด validation ไว้แล้ว')+
+    ' · ใช้เวลาประมวลผล '+V.sec+' วินาที</div>';
+
+  h+='<h4>📊 ช่องว่างระหว่างผลในกลุ่มกับนอกกลุ่ม (Optimism Gap)</h4>'+
+    '<canvas id="cvGap" height="210"></canvas>'+
+    '<table><thead><tr><th style="text-align:left">ตัวชี้วัด</th><th>ในกลุ่ม (calibration)</th>'+
+    '<th>นอกกลุ่ม (validation)</th><th>ช่องว่าง</th><th>การตีความ</th></tr></thead><tbody>'+
+    '<tr><td style="text-align:left;font-weight:700">Log-likelihood ต่อคน</td>'+
+      '<td>'+V.avg.llCal.toFixed(4)+'</td><td style="font-weight:800;color:var(--tl)">'+V.avg.llVal.toFixed(4)+'</td>'+
+      '<td style="font-weight:800;color:'+(gapLL>.15?'var(--er)':'var(--tx)')+'">'+gapLL.toFixed(4)+'</td>'+
+      '<td class="se" style="text-align:left">ช่องว่างที่กว้างบ่งชี้ว่าโมเดลจับเสียงรบกวนของกลุ่มตัวอย่างไปด้วย (overfitting)</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">SRMSR</td>'+
+      '<td>'+V.avg.srmsrCal.toFixed(4)+'</td><td style="font-weight:800;color:var(--tl)">'+V.avg.srmsrVal.toFixed(4)+'</td>'+
+      '<td style="font-weight:800;color:'+(gapSR>.02?'var(--er)':'var(--tx)')+'">+'+gapSR.toFixed(4)+'</td>'+
+      '<td class="se" style="text-align:left">ค่าความกลมกลืนที่แย่ลงนอกกลุ่มคือสัญญาณตรงของ selection bias</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">ความแม่นรายมิติ (P<sub>a</sub>)</td>'+
+      '<td>'+(V.avg.PaIn*100).toFixed(2)+'%</td>'+
+      '<td style="font-weight:800;color:var(--tl)">'+(V.avg.Pa*100).toFixed(2)+'%</td>'+
+      '<td style="font-weight:800">'+(gapPa*100).toFixed(2)+'%</td>'+
+      '<td class="se" style="text-align:left">ค่านอกกลุ่มคือค่าที่ควรใช้อ้างอิงเมื่อรายงานความแม่นของการจำแนก</td></tr>'+
+    '<tr><td style="text-align:left;font-weight:700">ความแม่นรายโปรไฟล์ (P<sub>c</sub>)</td>'+
+      '<td>'+(V.avg.PcIn*100).toFixed(2)+'%</td>'+
+      '<td style="font-weight:800;color:var(--tl)">'+(V.avg.Pc*100).toFixed(2)+'%</td>'+
+      '<td style="font-weight:800">'+((V.avg.PcIn-V.avg.Pc)*100).toFixed(2)+'%</td>'+
+      '<td class="se" style="text-align:left">ความน่าจะเป็นที่โปรไฟล์แฝงทั้งชุดถูกจำแนกถูกต้อง</td></tr>'+
+    '</tbody></table>';
+
+  h+='<h4>📋 ผลรายชุดข้อมูล</h4><div class="scroll"><table><thead><tr>'+
+    '<th style="text-align:left">ชุด</th><th>N<sub>cal</sub></th><th>N<sub>val</sub></th>'+
+    '<th>LL/คน (cal)</th><th>LL/คน (val)</th><th>SRMSR (val)</th>'+
+    '<th>M₂ นอกกลุ่ม</th><th>P<sub>a</sub></th><th>P<sub>c</sub></th>'+
+    '<th>พารามิเตอร์</th><th>เซลล์ Q ที่เปลี่ยน</th><th>โมเดลที่เลือก</th></tr></thead><tbody>';
+  F.forEach(function(o){
+    var wc=o.wcnt?('G '+o.wcnt.GDINA+' · D '+o.wcnt.DINA+' · O '+o.wcnt.DINO+' · A '+o.wcnt.ACDM):'–';
+    h+='<tr><td style="text-align:left;font-weight:700">'+o.label+'</td>'+
+      '<td>'+o.nCal+'</td><td>'+o.nVal+'</td>'+
+      '<td>'+o.llCalPer.toFixed(4)+'</td>'+
+      '<td style="font-weight:800;color:var(--tl)">'+o.llValPer.toFixed(4)+'</td>'+
+      '<td>'+o.srmsrVal.toFixed(4)+'</td>'+
+      '<td>'+(o.m2&&!o.m2.err?o.m2.M2.toFixed(1)+'<br><span class="se">df '+o.m2.df+' · p '+
+        (o.m2.p<.0001?'&lt;.0001':o.m2.p.toFixed(3))+'</span>':'<span class="se">–</span>')+'</td>'+
+      '<td>'+(o.Pa*100).toFixed(1)+'%</td><td>'+(o.Pc*100).toFixed(1)+'%</td>'+
+      '<td>'+o.npar+'</td>'+
+      '<td style="color:'+(o.qChanged?'var(--wn)':'var(--ok)')+';font-weight:700">'+o.qChanged+'</td>'+
+      '<td class="se">'+wc+'</td></tr>';});
+  h+='<tr class="sum"><td style="text-align:left">ค่าเฉลี่ย</td><td colspan="2">–</td>'+
+    '<td>'+V.avg.llCal.toFixed(4)+'</td><td>'+V.avg.llVal.toFixed(4)+'</td>'+
+    '<td>'+V.avg.srmsrVal.toFixed(4)+'</td><td>–</td>'+
+    '<td>'+(V.avg.Pa*100).toFixed(1)+'%</td><td>'+(V.avg.Pc*100).toFixed(1)+'%</td>'+
+    '<td>–</td><td>'+V.avg.qChanged.toFixed(1)+'</td><td>–</td></tr>';
+  h+='</tbody></table></div>'+
+    '<p class="note">M₂ นอกกลุ่มคำนวณโดยตรึงพารามิเตอร์ทั้งหมดจากชุด calibration จึงไม่มีพารามิเตอร์ใดถูกประมาณ '+
+    'จากชุด validation องศาอิสระจึงเท่ากับจำนวนโมเมนต์เต็ม (df = s) ค่านี้เป็นการทดสอบความกลมกลืนที่ปราศจากอคติ '+
+    'จากการเลือกโมเดลอย่างสมบูรณ์</p>';
+
+  if(V.reselect){
+    h+='<h4>🧩 ความคงทนของ Q-Matrix ข้ามชุดข้อมูล</h4><div class="scroll"><table><thead><tr>'+
+      '<th style="text-align:left">ข้อ</th><th>q เดิมจากไฟล์</th><th>q จากข้อมูลเต็ม</th>';
+    S.attrNames.forEach(function(n){h+='<th>'+n+'</th>';});
+    h+='<th>ความคงทน</th></tr></thead><tbody>';
+    var unstable=0;
+    for(var j=0;j<J;j++){
+      var minStab=1,cells='';
+      for(var k=0;k<K;k++){
+        var f=V.qCount[j][k]/V.nSplit,sel=f>=.5;
+        var stab=sel?f:1-f;minStab=Math.min(minStab,stab);
+        var col=stab>=.9?'#d1fae5':(stab>=.7?'#fef3c7':'#ffe4e6'),
+            txt=stab>=.9?'#059669':(stab>=.7?'#d97706':'#e11d48');
+        cells+='<td><span class="cellf" style="background:'+col+';color:'+txt+'">'+
+          Math.round(f*100)+'</span></td>';}
+      if(minStab<.7)unstable++;
+      h+='<tr'+(minStab<.7?' class="hl"':'')+'><td style="text-align:left;font-weight:700">'+S.itemNames[j]+'</td>'+
+        '<td class="mono">['+S.Qorig[j].join(' ')+']</td>'+
+        '<td class="mono" style="font-weight:800">['+S.Q[j].join(' ')+']</td>'+cells+
+        '<td>'+(minStab>=.9?'<span class="tag t-ok">สูง</span>'
+          :(minStab>=.7?'<span class="tag t-wn">ปานกลาง</span>':'<span class="tag t-er">ต่ำ</span>'))+'</td></tr>';}
+    h+='</tbody></table></div>'+
+      '<p class="note">ตัวเลขในแต่ละช่องคือเปอร์เซ็นต์ของชุดข้อมูลที่เลือกเซลล์นั้นเป็น 1 · '+
+      'ค่าใกล้ 100 หรือใกล้ 0 แปลว่าการตัดสินใจมั่นคง ส่วนค่าใกล้ 50 แปลว่าข้อมูลไม่มีหลักฐานเพียงพอ '+
+      'และการเลือกในข้อมูลชุดเต็มอาจเป็นเพียงผลของความบังเอิญ · พบข้อที่ความคงทนต่ำ <b>'+unstable+
+      ' ข้อ</b> จากทั้งหมด '+J+' ข้อ'+(unstable?' ซึ่งควรใช้ q ตามทฤษฎีเดิมมากกว่าเชื่อผลจากการค้นหาอัตโนมัติ':'')+'</p>';
+
+    var anyLink=F.some(function(o){return o.link;});
+    if(anyLink){
+      h+='<h4>⚖️ ความคงทนของการเลือกฟังก์ชันเชื่อมโยงข้ามชุดข้อมูล</h4><div class="scroll"><table><thead><tr>'+
+        '<th style="text-align:left">ข้อ</th><th>เลือกจากข้อมูลเต็ม</th>'+
+        '<th>G-DINA</th><th>DINA</th><th>DINO</th><th>ACDM</th>'+
+        '<th>โมเดลที่พบบ่อยที่สุด</th><th>ความถี่</th><th>ความคงทน</th></tr></thead><tbody>';
+      var lowStab=0;
+      for(var j2=0;j2<J;j2++){
+        var cc=V.linkCount[j2],tot=cc.GDINA+cc.DINA+cc.DINO+cc.ACDM;
+        if(!tot){h+='<tr><td style="text-align:left;font-weight:700">'+S.itemNames[j2]+
+          '</td><td colspan="8" class="se">ไม่มีข้อมูล</td></tr>';continue;}
+        var best='GDINA',bv=cc.GDINA;
+        ['DINA','DINO','ACDM'].forEach(function(m){if(cc[m]>bv){bv=cc[m];best=m;}});
+        var fr=bv/tot,full=S.gd&&S.gd.linkOf?S.gd.linkOf[j2]:'–';
+        if(fr<.7)lowStab++;
+        h+='<tr'+(fr<.7?' class="hl"':'')+'><td style="text-align:left;font-weight:700">'+S.itemNames[j2]+'</td>'+
+          '<td><span class="tag t-bl">'+full+'</span></td>'+
+          '<td>'+cc.GDINA+'</td><td>'+cc.DINA+'</td><td>'+cc.DINO+'</td><td>'+cc.ACDM+'</td>'+
+          '<td><span class="tag '+(best===full?'t-ok':'t-wn')+'">'+best+'</span></td>'+
+          '<td style="font-weight:700">'+(fr*100).toFixed(0)+'%</td>'+
+          '<td>'+(fr>=.9?'<span class="tag t-ok">สูง</span>'
+            :(fr>=.7?'<span class="tag t-wn">ปานกลาง</span>':'<span class="tag t-er">ต่ำ</span>'))+'</td></tr>';}
+      h+='</tbody></table></div>'+
+        '<p class="note">พบข้อที่การเลือกฟังก์ชันเชื่อมโยงไม่คงทน <b>'+lowStab+' ข้อ</b> '+
+        '(โมเดลที่พบบ่อยที่สุดยังถูกเลือกไม่ถึง 70% ของชุดข้อมูล) · ในข้อเหล่านี้ผลของ Wald test '+
+        'จากข้อมูลชุดเดียวไม่ควรถูกตีความว่าเป็นข้อสรุปเชิงเนื้อหา และการใช้ G-DINA เต็มรูปไว้ก่อน '+
+        'มักปลอดภัยกว่าเพราะไม่ได้บังคับข้อจำกัดที่ข้อมูลไม่สนับสนุน</p>';}}
+
+  if(V.agree){
+    h+='<h4>🎯 ความสอดคล้องของการจำแนกระหว่างผลนอกกลุ่มกับผลจากข้อมูลเต็ม</h4>'+
+      '<table><thead><tr><th style="text-align:left">มิติความสามารถ</th>'+
+      '<th>อัตราตรงกัน</th><th>Cohen\'s κ</th><th>ระดับความสอดคล้อง</th></tr></thead><tbody>';
+    V.agree.perAttr.forEach(function(o,k){
+      var kp=o.kappa,lv=kp>=.81?['เกือบสมบูรณ์','t-ok']:(kp>=.61?['สูง','t-ok']
+        :(kp>=.41?['ปานกลาง','t-wn']:(kp>=.21?['พอใช้','t-wn']:['ต่ำ','t-er'])));
+      h+='<tr><td style="text-align:left;font-weight:700">'+S.attrNames[k]+'</td>'+
+        '<td>'+(o.po*100).toFixed(2)+'%</td>'+
+        '<td style="font-weight:800;color:var(--acc)">'+(isFinite(kp)?kp.toFixed(3):'–')+'</td>'+
+        '<td><span class="tag '+lv[1]+'">'+lv[0]+'</span></td></tr>';});
+    var ov=V.agree.overall;
+    h+='<tr class="sum"><td style="text-align:left">รวมทุกมิติ</td>'+
+      '<td>'+(ov?(ov.po*100).toFixed(2):'–')+'%</td>'+
+      '<td>'+(ov?ov.kappa.toFixed(3):'–')+'</td>'+
+      '<td>ตรงกันทั้งโปรไฟล์ '+(V.agree.exact*100).toFixed(2)+'% ('+V.agree.nUsed+' คน)</td></tr>';
+    h+='</tbody></table>'+
+      '<p class="note">ตารางนี้เปรียบเทียบโปรไฟล์แฝงที่ได้จากการจำแนกโดยพารามิเตอร์ซึ่ง<b>ไม่เคยเห็นข้อมูลของผู้เข้าสอบคนนั้น</b> '+
+      'กับโปรไฟล์ที่ได้จากการวิเคราะห์ข้อมูลทั้งหมด · ค่า κ ที่สูงหมายความว่าการจำแนกไม่ได้ขึ้นกับการที่ผู้เข้าสอบคนนั้น '+
+      'อยู่ในกลุ่ม calibration ด้วย ซึ่งเป็นเงื่อนไขสำคัญหากจะนำโมเดลนี้ไปใช้จำแนกผู้เข้าสอบกลุ่มใหม่จริง · '+
+      'ค่า κ ที่ต่ำในมิติใดบ่งชี้ว่ามิตินั้นวัดได้ไม่มั่นคง มักเกิดจากจำนวนข้อสอบที่วัดมิตินั้นน้อยเกินไป</p>';}
+
+  h+='<div class="row" style="margin-top:12px">'+
+    '<button class="gh sm" onclick="dlCV()">⬇ ดาวน์โหลดผล Cross-Validation</button>'+
+    '<button class="gh sm" onclick="dlCVClass()">⬇ ดาวน์โหลดการจำแนกนอกกลุ่มรายบุคคล</button></div>';
+  host.innerHTML=h;drawCVGap('cvGap');}
+
+function drawCVGap(id){
+  var cv=document.getElementById(id);if(!cv||!S.cv)return;
+  var F=S.cv.folds,n=F.length,dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=210;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=64,pR=20,pT=30,pB=42;
+  var all=[];F.forEach(function(o){all.push(o.llCalPer,o.llValPer);});
+  var mn=Math.min.apply(null,all),mx=Math.max.apply(null,all),pad=Math.max((mx-mn)*.25,.01);
+  mn-=pad;mx+=pad;
+  function Y(v){return pT+(H-pT-pB)*(1-(v-mn)/(mx-mn));}
+  function X(i){return n>1?pL+(W-pL-pR)*(i+.5)/n:(pL+W-pR)/2;}
+  x.font='11px Sarabun,sans-serif';
+  for(var t=0;t<=4;t++){var vv=mn+(mx-mn)*t/4,yy=Y(vv);x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText(vv.toFixed(3),pL-7,yy+4);}
+  F.forEach(function(o,i){
+    var xc=X(i);
+    x.strokeStyle='#cbd5e1';x.lineWidth=2;
+    x.beginPath();x.moveTo(xc,Y(o.llCalPer));x.lineTo(xc,Y(o.llValPer));x.stroke();
+    x.fillStyle='#7c3aed';x.beginPath();x.arc(xc,Y(o.llCalPer),6,0,6.2832);x.fill();
+    x.fillStyle='#0d9488';x.beginPath();x.arc(xc,Y(o.llValPer),6,0,6.2832);x.fill();
+    x.fillStyle='#475569';x.font='10.5px Sarabun,sans-serif';x.textAlign='center';
+    x.fillText(o.label.replace('Fold ','F').replace('ครั้งที่ ','R'),xc,H-pB+18);});
+  x.strokeStyle='#7c3aed';x.lineWidth=2;x.setLineDash([5,4]);x.beginPath();
+  F.forEach(function(o,i){i?x.lineTo(X(i),Y(o.llCalPer)):x.moveTo(X(i),Y(o.llCalPer));});x.stroke();
+  x.strokeStyle='#0d9488';x.beginPath();
+  F.forEach(function(o,i){i?x.lineTo(X(i),Y(o.llValPer)):x.moveTo(X(i),Y(o.llValPer));});x.stroke();
+  x.setLineDash([]);
+  x.font='bold 11.5px Sarabun,sans-serif';x.textAlign='left';
+  x.fillStyle='#7c3aed';x.fillText('● ในกลุ่ม calibration',pL,18);
+  x.fillStyle='#0d9488';x.fillText('● นอกกลุ่ม validation',pL+150,18);
+  x.fillStyle='#64748b';x.font='11px Sarabun,sans-serif';
+  x.fillText('log-likelihood ต่อคน (ยิ่งสูงยิ่งดี)',pL+320,18);}
+
+function dlCV(){
+  if(!S.cv)return;
+  var t='Fold,N_cal,N_val,LL_cal_per,LL_val_per,SRMSR_cal,SRMSR_val,MADcor_val,'+
+    'M2_oos,df_oos,p_oos,Pa,Pc,Pa_in,Pc_in,npar,Q_cells_changed,Q_items_changed\n';
+  S.cv.folds.forEach(function(o){
+    t+='"'+o.label+'",'+o.nCal+','+o.nVal+','+f4(o.llCalPer)+','+f4(o.llValPer)+','+
+      f4(o.srmsrCal)+','+f4(o.srmsrVal)+','+f4(o.madVal)+','+
+      (o.m2&&!o.m2.err?f4(o.m2.M2)+','+o.m2.df+','+f4(o.m2.p):',,')+','+
+      f4(o.Pa)+','+f4(o.Pc)+','+f4(o.PaIn)+','+f4(o.PcIn)+','+o.npar+','+
+      o.qChanged+','+o.itemChanged+'\n';});
+  t+='\nStability of Q-matrix cells (proportion selected)\nItem,'+S.attrNames.join(',')+'\n';
+  for(var j=0;j<S.Q.length;j++){
+    t+=S.itemNames[j];
+    for(var k=0;k<S.attrNames.length;k++)t+=','+f4(S.cv.qCount[j][k]/S.cv.nSplit);
+    t+='\n';}
+  t+='\nStability of link function selection\nItem,GDINA,DINA,DINO,ACDM\n';
+  for(var j2=0;j2<S.Q.length;j2++){var c=S.cv.linkCount[j2];
+    t+=S.itemNames[j2]+','+c.GDINA+','+c.DINA+','+c.DINO+','+c.ACDM+'\n';}
+  dl('cda_crossvalidation_'+Date.now()+'.csv',t);}
+
+function dlCVClass(){
+  if(!S.cv||!S.cv.oofMap)return;
+  var K=S.attrNames.length;
+  var t='ID,InSample_Profile,OutOfFold_Profile,Match,MAP_posterior_OOF';
+  S.attrNames.forEach(function(n){t+=',P_OOF_'+n;});t+='\n';
+  S.ids.forEach(function(id,i){
+    var oo=S.cv.oofMap[i];if(!oo)return;
+    var ins=S.gd?S.gd.map[i]:null,same=ins?oo.every(function(v,k){return v===ins[k];}):'';
+    t+=id+',"'+(ins?ins.join(''):'')+'","'+oo.join('')+'",'+(same===''?'':(same?'1':'0'))+','+
+      f4(S.cv.oofP[i]);
+    for(var k=0;k<K;k++)t+=','+f4(S.cv.oofMarg[i][k]);
+    t+='\n';});
+  dl('cda_oof_classification_'+Date.now()+'.csv',t);}
+
+/* ==========================================================
+   Q FILE ACTIONS
+========================================================== */
+function dlFinalQ(){var t='Item,'+S.attrNames.join(',')+'\n';
+  S.Q.forEach(function(r,i){t+=S.itemNames[i]+','+r.join(',')+'\n';});
+  dl('qmatrix_final_'+Date.now()+'.csv',t);}
+function dlSuggestedQ(){if(!S.qv)return;
+  var Q=suggestedQfrom(S.qv),t='Item,'+S.attrNames.join(',')+'\n';
+  Q.forEach(function(r,i){t+=S.itemNames[i]+','+r.join(',')+'\n';});
+  dl('qmatrix_suggested_'+Date.now()+'.csv',t);}
+function applySuggestedQ(){if(!S.qv)return;
+  if(!confirm('แทนที่ Q-Matrix ด้วยเวกเตอร์ที่แนะนำ แล้ววิเคราะห์ใหม่ทั้งหมด?'))return;
+  S.Qapplied=suggestedQfrom(S.qv);runAnalysis();}
+function revertQ(){S.Qapplied=null;document.getElementById('qBadge').classList.add('hide');runAnalysis();}
+
+/* ==========================================================
+   RENDER — INDIVIDUAL
+========================================================== */
+function curStu(){var s=document.getElementById('stuSel');return S.students[s?+s.value:0];}
+
+function renderDiag(){
+  var stu=curStu();if(!stu)return;
+  var i=+document.getElementById('stuSel').value,bd=SS.band(stu.gTheta),mg=S.gd?S.gd.marg[i]:null;
+  var md=mg?mg.filter(function(p){return p>=S.threshold;}).length
+          :stu.pMastery.filter(function(p){return isFinite(p)&&p>=S.threshold;}).length;
+  var oof=(S.cv&&S.cv.oofMap)?S.cv.oofMap[i]:null;
+  document.getElementById('kpiS').innerHTML=
+    '<div><b>'+SS.fmt(stu.gTheta)+'</b><span>SCALE SCORE รวม</span></div>'+
+    '<div><b>'+(isFinite(stu.gTheta)?stu.gTheta.toFixed(3):'–')+'</b><span>θ รวม ('+(stu.method||S.est)+')</span></div>'+
+    '<div><b>'+(isFinite(stu.gSe)?stu.gSe.toFixed(3):'–')+'</b><span>SE(θ)</span></div>'+
+    '<div><b style="color:'+bd.color+'">'+bd.label+'</b><span>ระดับความสามารถ</span></div>'+
+    '<div><b>'+stu.raw+'/'+S.X[0].length+'</b><span>คะแนนดิบ</span></div>'+
+    '<div><b>'+md+'/'+S.attrNames.length+'</b><span>มิติที่รอบรู้</span></div>'+
+    (S.gd?'<div><b class="mono" style="font-size:16px">['+S.gd.map[i].join(' ')+']</b><span>โปรไฟล์แฝง MAP</span></div>'+
+      '<div><b>'+(S.gd.mapP[i]*100).toFixed(1)+'%</b><span>ความมั่นใจของโปรไฟล์</span></div>':'')+
+    (oof?'<div><b class="mono" style="font-size:16px;color:'+
+      (oof.join('')===S.gd.map[i].join('')?'var(--tl)':'var(--wn)')+'">['+oof.join(' ')+
+      ']</b><span>โปรไฟล์จากการจำแนกนอกกลุ่ม</span></div>':'');
+  var fl=stu.flags.filter(function(f){return f!=='ok';}),w=[];
+  if(fl.length)w.push('พบมิติที่ตอบถูกหรือผิดทั้งหมด ระบบใช้ EAP กำกับด้วย prior');
+  if(S.gd&&S.gd.mapP[i]<.5)w.push('ความมั่นใจของโปรไฟล์แฝง MAP ต่ำกว่า 50%');
+  if(S.qv&&S.qv.nFlag)w.push('Q-Matrix ยังมี '+S.qv.nFlag+' ข้อที่ไม่สอดคล้องกับข้อมูล');
+  if(S.m2&&!S.m2.err&&S.m2.rmsea>.08)w.push('RMSEA₂ = '+S.m2.rmsea.toFixed(3)+
+    ' สูงกว่าเกณฑ์ .08 โมเดลยังกลมกลืนกับข้อมูลไม่ดีพอ ควรตีความผลรายบุคคลอย่างระมัดระวัง');
+  if(oof&&S.gd&&oof.join('')!==S.gd.map[i].join(''))
+    w.push('การจำแนกนอกกลุ่มให้โปรไฟล์ต่างจากการวิเคราะห์ข้อมูลเต็ม แสดงว่าโปรไฟล์ของผู้เข้าสอบรายนี้ไม่มั่นคง');
+  document.getElementById('alertS').innerHTML=w.length
+    ?'<div class="msg m-wn">⚠️ '+w.join('<br>⚠️ ')+'</div>'
+    :'<div class="msg m-ok">✅ ค่าประมาณลู่เข้าปกติ Q-Matrix สอดคล้องกับข้อมูล และโมเดลผ่านการตรวจสอบความกลมกลืน</div>';
+  renderAbilityProfile(stu,mg);
+  requestAnimationFrame(function(){drawAbilityChart('cvAbility',stu);drawMastery('cvMastery',stu);});}
+
+function renderAbilityProfile(stu,mg){
+  var host=document.getElementById('abilityProfile'),th=stu.theta||[];
+  if(!th.length){host.innerHTML='<div class="msg m-wn">ยังไม่มีค่าประมาณ θ</div>';return;}
+  var i=+document.getElementById('stuSel').value,
+      oofM=(S.cv&&S.cv.oofMarg)?S.cv.oofMarg[i]:null;
+  var h='<table><thead><tr><th style="text-align:left">มิติความสามารถ</th><th>ข้อ</th><th>θ</th><th>SE(θ)</th>'+
+    '<th>Scale Score</th><th>95% CI</th><th>ระดับ</th><th>P(mastery) IRT</th>'+
+    (mg?'<th>P(mastery) G-DINA</th><th>α MAP</th>':'')+
+    (oofM?'<th>P(mastery) นอกกลุ่ม</th>':'')+'<th>สถานะ</th></tr></thead><tbody>';
+  th.forEach(function(t,k){
+    var s=stu.seTheta[k],ci=SS.ci(t,s),bd=SS.band(t),pm=stu.pMastery[k],gp=mg?mg[k]:null;
+    var ok=gp!==null?gp>=S.threshold:(isFinite(pm)&&pm>=S.threshold);
+    h+='<tr><td style="text-align:left;font-weight:700">'+S.attrNames[k]+'</td><td>'+stu.nItems[k]+'</td>'+
+      '<td>'+(isFinite(t)?t.toFixed(3):'–')+'</td><td>'+(isFinite(s)?s.toFixed(3):'–')+'</td>'+
+      '<td style="font-weight:800;font-size:15px;color:'+bd.color+'">'+SS.fmt(t)+'</td>'+
+      '<td class="se">'+(ci?ci[0].toFixed(1)+' – '+ci[1].toFixed(1):'–')+'</td>'+
+      '<td><span class="tag" style="background:'+bd.color+'22;color:'+bd.color+'">'+bd.label+'</span></td>'+
+      '<td>'+(isFinite(pm)?pm.toFixed(3):'–')+'</td>'+
+      (mg?'<td style="font-weight:800;color:'+(gp>=S.threshold?'var(--ok)':'var(--er)')+'">'+gp.toFixed(3)+'</td>'+
+        '<td class="mono">'+S.gd.map[i][k]+'</td>':'')+
+      (oofM?'<td style="color:var(--tl);font-weight:700">'+oofM[k].toFixed(3)+'</td>':'')+
+      '<td><span class="tag '+(ok?'t-ok':'t-er')+'">'+(ok?'รอบรู้':'ยังไม่รอบรู้')+'</span></td></tr>';});
+  var bg=SS.band(stu.gTheta),cg=SS.ci(stu.gTheta,stu.gSe);
+  h+='<tr class="sum"><td style="text-align:left">ภาพรวม</td><td>'+S.X[0].length+'</td>'+
+    '<td>'+(isFinite(stu.gTheta)?stu.gTheta.toFixed(3):'–')+'</td>'+
+    '<td>'+(isFinite(stu.gSe)?stu.gSe.toFixed(3):'–')+'</td>'+
+    '<td style="font-size:16px;color:'+bg.color+'">'+SS.fmt(stu.gTheta)+'</td>'+
+    '<td>'+(cg?cg[0].toFixed(1)+' – '+cg[1].toFixed(1):'–')+'</td>'+
+    '<td><span class="tag" style="background:'+bg.color+'22;color:'+bg.color+'">'+bg.label+'</span></td>'+
+    '<td colspan="'+((mg?2:0)+(oofM?1:0)+2)+'">–</td></tr>';
+  host.innerHTML=h+'</tbody></table>';}
+
+function drawAbilityChart(id,stu){
+  var cv=document.getElementById(id);if(!cv||!stu||!stu.theta.length)return;
+  var th=stu.theta,dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=380;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=62,pR=76,pT=40,pB=58;
+  function Y(v){return pT+(H-pT-pB)*(1-(v-SS.LO)/(SS.HI-SS.LO));}
+  function X(i){return th.length>1?pL+(W-pL-pR)*i/(th.length-1):(pL+W-pR)/2;}
+  x.font='12px Sarabun,sans-serif';
+  for(var v=SS.LO;v<=SS.HI;v+=10){var yy=Y(v);
+    x.strokeStyle=(v===50)?'#94a3b8':'#e2e8f0';x.lineWidth=(v===50)?2:1;
+    x.setLineDash(v===50?[6,4]:[]);x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();x.setLineDash([]);
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText(((v-50)/10).toFixed(1),pL-8,yy+4);
+    x.textAlign='left';x.fillText(String(v),W-pR+8,yy+4);}
+  x.fillStyle='#1e293b';x.font='bold 12.5px Sarabun,sans-serif';
+  x.textAlign='right';x.fillText('θ',pL-8,pT-14);x.textAlign='left';x.fillText('Scale Score',W-pR+8,pT-14);
+  th.forEach(function(t,i){var ci=SS.ci(t,stu.seTheta[i]);if(!ci)return;
+    x.strokeStyle='rgba(124,58,237,.20)';x.lineWidth=12;x.lineCap='round';
+    x.beginPath();x.moveTo(X(i),Y(ci[0]));x.lineTo(X(i),Y(ci[1]));x.stroke();});
+  x.lineCap='butt';x.strokeStyle='#7c3aed';x.lineWidth=3;x.beginPath();
+  var st=false;th.forEach(function(t,i){var v2=SS.calc(t);if(v2===null)return;
+    st?x.lineTo(X(i),Y(v2)):x.moveTo(X(i),Y(v2));st=true;});x.stroke();
+  th.forEach(function(t,i){var v3=SS.calc(t);
+    if(v3===null){x.fillStyle='#94a3b8';x.textAlign='center';x.fillText('–',X(i),Y(50));return;}
+    var bd=SS.band(t);x.fillStyle=bd.color;x.beginPath();x.arc(X(i),Y(v3),13,0,6.2832);x.fill();
+    x.fillStyle='#fff';x.font='bold 11.5px Sarabun,sans-serif';x.textAlign='center';
+    x.fillText(v3.toFixed(0),X(i),Y(v3)+4);
+    x.fillStyle='#334155';x.font='12px Sarabun,sans-serif';x.fillText(S.attrNames[i],X(i),H-pB+22);});}
+
+function drawMastery(id,stu){
+  var cv=document.getElementById(id);if(!cv)return;
+  var i=+document.getElementById('stuSel').value,dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=250;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  if(!S.gd){x.fillStyle='#94a3b8';x.textAlign='center';x.fillText('ไม่ได้เปิดใช้งาน G-DINA',W/2,H/2);return;}
+  var v=S.gd.marg[i],K=v.length,pL=48,pR=16,pT=22,pB=44,
+      oof=(S.cv&&S.cv.oofMarg)?S.cv.oofMarg[i]:null;
+  x.font='11.5px Sarabun,sans-serif';
+  for(var t=0;t<=5;t++){var yy=pT+(H-pT-pB)*t/5;x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText((1-t/5).toFixed(1),pL-7,yy+4);}
+  var ty=pT+(H-pT-pB)*(1-S.threshold);
+  x.strokeStyle='#e11d48';x.lineWidth=2;x.setLineDash([7,5]);
+  x.beginPath();x.moveTo(pL,ty);x.lineTo(W-pR,ty);x.stroke();x.setLineDash([]);
+  x.fillStyle='#e11d48';x.font='bold 11px Sarabun,sans-serif';x.textAlign='left';
+  x.fillText('เกณฑ์ '+S.threshold.toFixed(2),pL+4,ty-5);
+  v.forEach(function(p,k){
+    var cw=(W-pL-pR)/K,bx=pL+cw*k+cw*.16,bw=cw*(oof?.32:.68),bh=(H-pT-pB)*p,by=H-pB-bh;
+    x.fillStyle=p>=S.threshold?'#059669':'#e11d48';x.globalAlpha=.88;x.fillRect(bx,by,bw,bh);x.globalAlpha=1;
+    if(oof){var p2=oof[k],bh2=(H-pT-pB)*p2,bx2=bx+bw+cw*.04;
+      x.fillStyle='#0d9488';x.globalAlpha=.7;x.fillRect(bx2,H-pB-bh2,bw,bh2);x.globalAlpha=1;}
+    x.fillStyle='#334155';x.font='bold 10.5px Sarabun,sans-serif';x.textAlign='center';
+    x.fillText(p.toFixed(3),bx+bw/2,by-6);
+    x.font='11.5px Sarabun,sans-serif';x.fillStyle='#475569';x.fillText(S.attrNames[k],pL+cw*(k+.5),H-pB+18);});
+  if(oof){x.font='bold 11px Sarabun,sans-serif';x.textAlign='left';
+    x.fillStyle='#059669';x.fillText('■ ในกลุ่ม',pL,pT-8);
+    x.fillStyle='#0d9488';x.fillText('■ นอกกลุ่ม (CV)',pL+72,pT-8);}}
+
+window.addEventListener('resize',function(){
+  if(!S.students.length)return;var s=curStu();if(!s)return;
+  drawHist('cvHist',S.students.map(function(o){return SS.calc(o.gTheta);}).filter(function(v){return v!==null;}));
+  drawAbilityChart('cvAbility',s);drawMastery('cvMastery',s);
+  if(S.gd)drawPrev('cvPrev');if(S.qv)drawPVAF('cvPvaf');if(S.qvHist)drawBIC('cvBic');
+  if(S.af)drawResid('cvResid');if(S.boot)drawBootDist('cvBoot');
+  if(S.m2&&!S.m2.err)drawRmsea('cvRmsea');if(S.cv)drawCVGap('cvGap');});
+
+/* ==========================================================
+   PRINT + EXPORT
+========================================================== */
+function printReport(){
+  var stu=curStu();if(!stu){alert('กรุณาวิเคราะห์ข้อมูลก่อน');return;}
+  var i=+document.getElementById('stuSel').value,mg=S.gd?S.gd.marg[i]:null,rows='';
+  stu.theta.forEach(function(t,k){
+    var ci=SS.ci(t,stu.seTheta[k]),bd=SS.band(t),pm=stu.pMastery[k],gp=mg?mg[k]:null;
+    var ok=gp!==null?gp>=S.threshold:(isFinite(pm)&&pm>=S.threshold);
+    rows+='<tr><td class="l">'+S.attrNames[k]+'</td><td>'+stu.nItems[k]+'</td>'+
+      '<td>'+(isFinite(t)?t.toFixed(3):'–')+'</td><td class="ss">'+SS.fmt(t)+'</td>'+
+      '<td>'+(ci?ci[0].toFixed(1)+'–'+ci[1].toFixed(1):'–')+'</td><td>'+bd.label+'</td>'+
+      '<td>'+(isFinite(pm)?pm.toFixed(3):'–')+'</td>'+
+      (mg?'<td><b>'+gp.toFixed(3)+'</b></td><td>'+S.gd.map[i][k]+'</td>':'')+
+      '<td>'+(ok?'รอบรู้':'ยังไม่รอบรู้')+'</td></tr>';});
+  var cg=SS.ci(stu.gTheta,stu.gSe),weak=[];
+  stu.theta.forEach(function(t,k){var gp=mg?mg[k]:stu.pMastery[k];
+    if(!(isFinite(gp)&&gp>=S.threshold))weak.push({n:S.attrNames[k],ss:SS.calc(t)||99});});
+  weak.sort(function(a,b){return a.ss-b.ss;});
+  var css='body{font-family:Sarabun,sans-serif;color:#1e293b;padding:24px;font-size:12.5px}'+
+   'h2{color:#7c3aed;margin:0 0 2px}h3{margin:16px 0 6px;font-size:14px}'+
+   '.hd{border-bottom:2px solid #7c3aed;padding-bottom:8px;margin-bottom:12px}'+
+   '.rpt{width:100%;border-collapse:collapse;margin:7px 0;font-size:11.5px}'+
+   '.rpt th,.rpt td{border:1px solid #cbd5e1;padding:5px;text-align:center}'+
+   '.rpt th{background:#ede9fe}.rpt td.l{text-align:left;font-weight:700}'+
+   '.rpt td.ss{font-weight:800;font-size:13px;color:#7c3aed}'+
+   '.rpt tr.sum{background:#f1f5f9;font-weight:800}'+
+   '.note{font-size:10.5px;color:#475569;margin-top:4px;line-height:1.55}'+
+   '.mono{font-family:monospace;letter-spacing:2px;font-size:13px;font-weight:800}'+
+   '.sig{margin-top:40px;text-align:right;font-size:12px}'+
+   'footer{margin-top:24px;border-top:1px solid #cbd5e1;padding-top:8px;text-align:center;font-size:10.5px;color:#64748b}'+
+   '@media print{.rpt{page-break-inside:avoid}}';
+  var m2Line=(S.m2&&!S.m2.err)?('<tr><td class="l">ความกลมกลืนสัมบูรณ์</td><td>M₂('+S.m2.df+') = '+
+    S.m2.M2.toFixed(2)+' · p = '+(S.m2.p<.0001?'&lt;.0001':S.m2.p.toFixed(4))+'</td>'+
+    '<td class="l">RMSEA₂ (90% CI)</td><td>'+S.m2.rmsea.toFixed(4)+' ['+S.m2.lo.toFixed(4)+', '+
+    S.m2.hi.toFixed(4)+']</td></tr>'):'';
+  var cvLine=S.cv?('<tr><td class="l">การตรวจสอบข้ามกลุ่ม</td><td>'+
+    (S.cv.mode==='KFOLD'?S.cv.k+'-fold':'Holdout')+' · '+S.cv.nSplit+' ชุด</td>'+
+    '<td class="l">ความแม่นการจำแนกนอกกลุ่ม</td><td>P<sub>a</sub> = '+(S.cv.avg.Pa*100).toFixed(2)+
+    '% · P<sub>c</sub> = '+(S.cv.avg.Pc*100).toFixed(2)+'%</td></tr>'):'';
+  var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>รายงาน '+stu.id+
+   '</title><style>'+css+'</style></head><body>'+
+   '<div class="hd"><h2>รายงานผลการวินิจฉัยความสามารถรายบุคคล</h2>'+
+   '<div style="font-size:11.5px;color:#64748b">CDA-GDINA Analyzer Pro · Cognitive Diagnostic Assessment Report</div></div>'+
+   '<h3>ตารางที่ 1 ข้อมูลผู้เข้ารับการประเมินและวิธีวิเคราะห์</h3><table class="rpt">'+
+   '<tr><td class="l">รหัสประจำตัว</td><td>'+stu.id+'</td><td class="l">คะแนนดิบ</td><td>'+stu.raw+' / '+S.X[0].length+'</td></tr>'+
+   '<tr><td class="l">Scale Score รวม</td><td class="ss">'+SS.fmt(stu.gTheta)+' ('+SS.band(stu.gTheta).label+')</td>'+
+   '<td class="l">95% CI ของ SS</td><td>'+(cg?cg[0].toFixed(1)+'–'+cg[1].toFixed(1):'–')+'</td></tr>'+
+   (S.gd?'<tr><td class="l">โมเดลวินิจฉัย</td><td>'+(S.gd.link==='MIXED'?'G-DINA ผสมรายข้อ':S.gd.link)+' · '+
+     (S.gd.struc==='HO'?'Higher-Order':'Saturated')+'</td><td class="l">โปรไฟล์แฝง MAP</td>'+
+     '<td class="mono">['+S.gd.map[i].join(' ')+'] · '+(S.gd.mapP[i]*100).toFixed(1)+'%</td></tr>':'')+
+   m2Line+cvLine+
+   '<tr><td class="l">เกณฑ์ความรอบรู้</td><td>P ≥ '+S.threshold.toFixed(2)+'</td>'+
+   '<td class="l">วันที่ออกรายงาน</td><td>'+new Date().toLocaleDateString('th-TH')+'</td></tr></table>'+
+   '<h3>ตารางที่ 2 ผลการวินิจฉัยมิติความสามารถรายบุคคล</h3>'+
+   '<table class="rpt"><thead><tr><th>มิติความสามารถ</th><th>ข้อ</th><th>θ</th><th>Scale Score</th>'+
+   '<th>95% CI</th><th>ระดับ</th><th>P(mastery) IRT</th>'+
+   (mg?'<th>P(mastery) G-DINA</th><th>α</th>':'')+'<th>สถานะ</th></tr></thead><tbody>'+rows+
+   '<tr class="sum"><td class="l">ภาพรวม</td><td>'+S.X[0].length+'</td>'+
+   '<td>'+(isFinite(stu.gTheta)?stu.gTheta.toFixed(3):'–')+'</td><td class="ss">'+SS.fmt(stu.gTheta)+'</td>'+
+   '<td>'+(cg?cg[0].toFixed(1)+'–'+cg[1].toFixed(1):'–')+'</td><td>'+SS.band(stu.gTheta).label+'</td>'+
+   '<td>–</td>'+(mg?'<td>–</td><td class="mono">['+S.gd.map[i].join('')+']</td>':'')+'<td>–</td></tr></tbody></table>'+
+   '<p class="note">หมายเหตุ: Scale Score = 50 + 10θ (M = 50, SD = 10) ปรับช่วง 20–80 คะแนน · '+
+   (S.m2&&!S.m2.err&&S.m2.rmsea>.08?'<b>คำเตือน:</b> RMSEA₂ = '+S.m2.rmsea.toFixed(3)+
+     ' สูงกว่าเกณฑ์ .08 โมเดลยังกลมกลืนกับข้อมูลไม่ดีพอ ควรตีความผลด้วยความระมัดระวัง'
+    :'โมเดลผ่านการตรวจสอบความกลมกลืนในระดับที่ยอมรับได้')+'</p>'+
+   '<h3>ข้อเสนอแนะเชิงการสอน</h3><p style="font-size:12px">'+
+   (weak.length?'ควรจัดกิจกรรมซ่อมเสริมโดยเรียงลำดับความเร่งด่วนจาก Scale Score ต่ำที่สุดก่อน ได้แก่ <b>'+
+     weak.map(function(o){return o.n;}).join(' → ')+'</b>'
+    :'ผู้เข้ารับการประเมินผ่านเกณฑ์ความรอบรู้ครบทุกมิติ')+'</p>'+
+   '<div class="sig">ลงชื่อ ..............................................<br>(ผู้รับผิดชอบการประเมิน)<br>วันที่ '+
+   new Date().toLocaleDateString('th-TH')+'</div>'+
+   '<footer>© 2026 | Developed by ดร.ชัยมงคล ปินะสา คณะครุศาสตร์ มหาวิทยาลัยราชภัฏเลย | All rights reserved.</footer>'+
+   '</body></html>';
+  var w=window.open('','_blank','width=940,height=760');
+  if(!w){alert('เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตแล้วลองใหม่');return;}
+  w.document.write(html);w.document.close();w.onload=function(){w.focus();w.print();};}
+
+function dl(name,txt){
+  var b=new Blob(['\uFEFF'+txt],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);}
+function f4(v){return isFinite(v)?Number(v).toFixed(4):'';}
+
+function exportCSV(){
+  if(!S.students.length){alert('กรุณาวิเคราะห์ข้อมูลก่อน');return;}
+  var gd=!!S.gd,BT=(S.boot&&S.boot.items)?S.boot:null,CV=S.cv;
+  var h=['ID','RawScore','Theta_Total','SE_Total','ScaleScore_Total','Level'];
+  if(gd)h.push('MAP_Profile','MAP_Posterior');
+  if(CV&&CV.oofMap)h.push('OOF_Profile','OOF_Posterior','OOF_Match');
+  S.attrNames.forEach(function(n){h.push('Theta_'+n,'SE_'+n,'SS_'+n,'Pmastery_IRT_'+n);
+    if(gd)h.push('Pmastery_GDINA_'+n,'Alpha_'+n);
+    if(CV&&CV.oofMarg)h.push('Pmastery_OOF_'+n);h.push('Status_'+n);});
+  var out=[h.join(',')];
+  S.students.forEach(function(s,i){
+    var r=[s.id,s.raw,f4(s.gTheta),f4(s.gSe),SS.fmt(s.gTheta),SS.band(s.gTheta).label];
+    if(gd)r.push('"'+S.gd.map[i].join('')+'"',f4(S.gd.mapP[i]));
+    if(CV&&CV.oofMap){var oo=CV.oofMap[i];
+      r.push(oo?'"'+oo.join('')+'"':'',oo?f4(CV.oofP[i]):'',
+        oo&&gd?(oo.join('')===S.gd.map[i].join('')?'1':'0'):'');}
+    s.theta.forEach(function(t,k){var pm=s.pMastery[k],gp=gd?S.gd.marg[i][k]:null;
+      r.push(f4(t),f4(s.seTheta[k]),SS.fmt(t),f4(pm));
+      if(gd)r.push(f4(gp),S.gd.map[i][k]);
+      if(CV&&CV.oofMarg)r.push(CV.oofMarg[i]?f4(CV.oofMarg[i][k]):'');
+      r.push((gd?gp>=S.threshold:(isFinite(pm)&&pm>=S.threshold))?'Mastered':'Not mastered');});
+    out.push(r.join(','));});
+  dl('cda_results_'+Date.now()+'.csv',out.join('\n'));
+
+  var h2=['Item','N','p','rpbis','a','b'];
+  if(gd)h2=h2.concat(['Kj','RequiredAttrs','Link','g','P1','delta']);
+  if(BT)h2=h2.concat(['SE_boot_g','SE_boot_delta','CI_lo','CI_hi']);
+  if(S.qv)h2=h2.concat(['Q_original','Q_used','PVAF_used','Q_flag']);
+  if(S.wald)h2=h2.concat(['Wald_selected']);
+  if(S.cv&&S.cv.reselect)h2=h2.concat(['Q_stability_min','Link_stability']);
+  var o2=[h2.join(',')];
+  S.ip.forEach(function(o,j){
+    var r=[o.name,o.n,f4(o.p),f4(o.rpb),f4(o.a),f4(o.b)];
+    if(gd){var gi=S.gd.items[j];
+      r=r.concat([gi.nreq,'"'+gi.req.join('|')+'"',gi.link,f4(gi.g),f4(gi.p1),f4(gi.delta)]);}
+    if(BT){var bi=BT.items[j];r=r.concat([f4(bi.g.se),f4(bi.delta.se),f4(bi.delta.lo),f4(bi.delta.hi)]);}
+    if(S.qv){var v=S.qv.rows[j];
+      r=r.concat(['"'+S.Qorig[j].join('')+'"','"'+S.Q[j].join('')+'"',f4(v.provP),
+        v.degenerate?'Degenerate':(v.ok?'OK':'Revise')]);}
+    if(S.wald){var wr=S.wald.rows[j];r.push(wr.selB||wr.sel||'GDINA');}
+    if(S.cv&&S.cv.reselect){
+      var ms=1;for(var k=0;k<S.attrNames.length;k++){
+        var f=S.cv.qCount[j][k]/S.cv.nSplit;ms=Math.min(ms,f>=.5?f:1-f);}
+      var cc=S.cv.linkCount[j],tt=cc.GDINA+cc.DINA+cc.DINO+cc.ACDM,bv=Math.max(cc.GDINA,cc.DINA,cc.DINO,cc.ACDM);
+      r=r.concat([f4(ms),tt?f4(bv/tt):'']);}
+    o2.push(r.join(','));});
+  setTimeout(function(){dl('cda_item_parameters_'+Date.now()+'.csv',o2.join('\n'));},400);
+
+  var h3='Statistic,Value,df,p,Lower90,Upper90,Note\n';
+  if(S.m2&&!S.m2.err)
+    h3+='M2,'+f4(S.m2.M2)+','+S.m2.df+','+f4(S.m2.p)+',,,limited-information goodness of fit\n'+
+        'RMSEA2,'+f4(S.m2.rmsea)+',,,'+f4(S.m2.lo)+','+f4(S.m2.hi)+',90% CI (Browne-Cudeck)\n'+
+        'p_close_fit,'+f4(S.m2.pClose)+',,,,,H0: RMSEA <= .05\n'+
+        (isFinite(S.m2.cfi)?'CFI2,'+f4(S.m2.cfi)+',,,,,baseline = independence model\n':'')+
+        (isFinite(S.m2.tli)?'TLI2,'+f4(S.m2.tli)+',,,,,\n':'');
+  if(S.af)h3+='SRMSR,'+f4(S.af.srmsr)+',,'+(S.boot?f4(S.boot.fit.srmsr.p):'')+',,,\n'+
+    'MADcor,'+f4(S.af.madcor)+',,'+(S.boot?f4(S.boot.fit.madcor.p):'')+',,,\n'+
+    'maxChi2,'+f4(S.af.maxChi)+',1,'+(S.boot?f4(S.boot.fit.maxChi.p):f4(S.af.pChiBonf))+',,,\n';
+  if(S.cv)h3+='CV_loglik_per_person,'+f4(S.cv.avg.llVal)+',,,,,out-of-sample\n'+
+    'CV_Pa,'+f4(S.cv.avg.Pa)+',,,,,out-of-sample attribute accuracy\n'+
+    'CV_Pc,'+f4(S.cv.avg.Pc)+',,,,,out-of-sample pattern accuracy\n'+
+    'CV_SRMSR,'+f4(S.cv.avg.srmsrVal)+',,,,,out-of-sample\n'+
+    (S.cv.agree&&S.cv.agree.overall?'CV_kappa,'+f4(S.cv.agree.overall.kappa)+',,,,,agreement with full-sample classification\n':'');
+  setTimeout(function(){dl('cda_fit_summary_'+Date.now()+'.csv',h3);},800);}
+
+/* ==========================================================
+   SAMPLE DATA
+========================================================== */
+var SQ=[[1,0,0,0],[1,0,0,0],[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0],[1,0,1,0],
+        [0,0,1,0],[0,0,1,0],[0,0,1,0],[0,1,1,0],[0,0,0,1],[0,0,0,1],[0,0,0,1],[0,0,1,1],
+        [1,0,0,1],[0,1,0,1],[1,1,1,0],[0,1,1,1]];
+var GEN=['D','D','D','DINA','D','D','D','DINO','D','D','D','ACDM','D','D','D','DINA',
+         'DINO','ACDM','GDINA','GDINA'];
+function genSampleQ(){
+  var t='Item,การบวก-ลบ,การคูณ-หาร,เศษส่วน,การแก้โจทย์\n';
+  SQ.forEach(function(r,i){t+='I'+(i+1)+','+r.join(',')+'\n';});
+  dl('sample_qmatrix.csv',t);}
+function genSampleQbad(){
+  var B=SQ.map(function(r){return r.slice();});
+  B[2]=[0,1,0,0];B[8]=[0,0,1,1];B[12]=[1,0,0,0];B[18]=[1,0,0,0];
+  var t='Item,การบวก-ลบ,การคูณ-หาร,เศษส่วน,การแก้โจทย์\n';
+  B.forEach(function(r,i){t+='I'+(i+1)+','+r.join(',')+'\n';});
+  dl('sample_qmatrix_misspecified.csv',t);}
+function genSampleR(){
+  RNG.seed(20260901);
+  var N=800,J=SQ.length,hdr=['ID'];for(var j=0;j<J;j++)hdr.push('I'+(j+1));
+  var rows=[hdr.join(',')],lam=[{a:1.6,b:-.6},{a:1.4,b:-.1},{a:1.5,b:.3},{a:1.3,b:.7}];
+  for(var i=0;i<N;i++){
+    var th=gaussR(),al=lam.map(function(o){return rnd()<1/(1+Math.exp(-o.a*(th-o.b)))?1:0;});
+    var r=['STU-'+String(i+1).padStart(3,'0')],x=[];
+    for(var j2=0;j2<J;j2++){
+      var need=SQ[j2],kj=0,got=0;
+      need.forEach(function(v,k){if(v){kj++;if(al[k])got++;}});
+      var g=GEN[j2],p;
+      if(kj===0)p=.5;
+      else if(g==='DINA')p=(got===kj)?.88:.12;
+      else if(g==='DINO')p=(got>0)?.85:.14;
+      else if(g==='ACDM')p=.12+(.76/kj)*got;
+      else if(g==='GDINA')p=.10+.30*(got/kj)+.48*Math.pow(got/kj,3);
+      else p=.10+.80*Math.pow(got/kj,1.5);
+      x.push(rnd()<clamp(p,.02,.98)?1:0);}
+    if(x[8]===1&&rnd()<.22)x[9]=1;
+    rows.push(r.concat(x).join(','));}
+  dl('sample_responses.csv',rows.join('\n'));}
+cvModeUI();
+</script>
+</body>
+</html>
