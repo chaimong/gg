@@ -1488,7 +1488,7 @@ function drawHist(id,vals){
     if(c){x.fillStyle='#334155';x.font='bold 11px Sarabun,sans-serif';x.textAlign='center';x.fillText(c,bx+bwd/2,by-5);}
     x.fillStyle='#64748b';x.font='11px Sarabun,sans-serif';x.fillText(Math.round(lo+bw*i),bx+bwd/2,H-pB+17);});
   x.fillStyle='#1e293b';x.font='bold 12.5px Sarabun,sans-serif';x.textAlign='left';
-  x.fillText('การกระจายของ Scale Score (50 + 10θ)',pL,pT-9);}
+  x.fillText('การกระจายของ Scale Score (50 + 10(θ))',pL,pT-9);}
 
 function renderItemTable(){
   var em=(S.cal==='EM');
@@ -2466,7 +2466,7 @@ function printReport(){
    '<td>'+(isFinite(stu.gTheta)?stu.gTheta.toFixed(3):'–')+'</td><td class="ss">'+SS.fmt(stu.gTheta)+'</td>'+
    '<td>'+(cg?cg[0].toFixed(1)+'–'+cg[1].toFixed(1):'–')+'</td><td>'+SS.band(stu.gTheta).label+'</td>'+
    '<td>–</td>'+(mg?'<td>–</td><td class="mono">['+S.gd.map[i].join('')+']</td>':'')+'<td>–</td></tr></tbody></table>'+
-   '<p class="note">หมายเหตุ: Scale Score = 50 + 10θ (M = 50, SD = 10) ปรับช่วง 20–80 คะแนน · '+
+   '<p class="note">หมายเหตุ: Scale Score = 50 + 10(θ) (M = 50, SD = 10) ปรับช่วง 20–80 คะแนน · '+
    (S.m2&&!S.m2.err&&S.m2.rmsea>.08?'<b>คำเตือน:</b> RMSEA₂ = '+S.m2.rmsea.toFixed(3)+
      ' สูงกว่าเกณฑ์ .08 โมเดลยังกลมกลืนกับข้อมูลไม่ดีพอ ควรตีความผลด้วยความระมัดระวัง'
     :'โมเดลผ่านการตรวจสอบความกลมกลืนในระดับที่ยอมรับได้')+'</p>'+
@@ -2594,6 +2594,20 @@ function genSampleR(){
     rows.push(r.concat(x).join(','));}
   dl('sample_responses.csv',rows.join('\n'));}
 cvModeUI();
+</script>
+      <script language=JavaScript>
+<!--
+var message="Do not click right..!! (อย่าคลิ๊กขวา..!!)";
+///////////////////////////////////
+function clickIE() {if (document.all) {alert(message);return false;}}
+function clickNS(e) {if 
+(document.layers||(document.getElementById&&!document.all)) {
+if (e.which==2||e.which==3) {alert(message);return false;}}}
+if (document.layers) 
+{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
+else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
+document.oncontextmenu=new Function("return false")
+// --> 
 </script>
 </body>
 </html>
