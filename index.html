@@ -3,188 +3,339 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CDA-GDINA Analyzer Pro — M₂ / RMSEA₂ & Cross-Validation</title>
+<title>CDA-GDINA Analyzer Pro v6.1 — G-DINA · MIRT · Deep-IRT</title>
+<meta name="description" content="โปรแกรมวิเคราะห์การประเมินเชิงวินิจฉัยทางปัญญา (CDA) ด้วยโมเดล G-DINA พร้อม MML-EM, Q-Matrix Validation, Wald Test, M₂/RMSEA₂, Parametric Bootstrap และ Cross-Validation">
+<meta name="theme-color" content="#7c3aed">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700;800&amp;display=swap" rel="stylesheet">
 <style>
-:root{--tx:#334155;--lb:#1e293b;--mut:#64748b;--ok:#059669;--ok-l:#d1fae5;--er:#e11d48;--er-l:#ffe4e6;--wn:#d97706;--wn-l:#fef3c7;--acc:#7c3aed;--acc-l:#ede9fe;--grid:#e2e8f0;--bl:#0284c7;--bl-l:#e0f2fe;--tl:#0d9488;--tl-l:#ccfbf1}
+:root{
+  --ink:#0f172a;--tx:#3f4a5a;--lb:#111827;--mut:#6b7280;
+  --bg:#f5f6fa;--surface:#ffffff;--line:#e6e8ef;--grid:#e6e8ef;
+  --acc:#6d4aff;--acc-d:#5a35f0;--acc-l:#efeaff;
+  --ok:#0f9d58;--ok-l:#e3f6ec;--er:#e11d48;--er-l:#ffe7ec;
+  --wn:#c2740a;--wn-l:#fdf3e0;--bl:#0b76c4;--bl-l:#e4f1fb;
+  --tl:#0d8f86;--tl-l:#e0f6f4;
+  --r:14px;--sh:0 1px 2px rgba(16,24,40,.05),0 8px 24px -18px rgba(16,24,40,.35);
+}
 *{box-sizing:border-box}
-body{font-family:'Sarabun','Segoe UI',Tahoma,sans-serif;color:var(--tx);background:#f8fafc;padding:20px;line-height:1.6;margin:0}
-.wrap{max-width:1300px;margin:0 auto}
-.card{background:#fff;padding:22px;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:20px}
-h2{color:var(--acc);margin:0 0 4px}h3{color:var(--lb);margin:0 0 12px;font-size:17px}
-h4{color:var(--lb);margin:18px 0 8px;font-size:14.5px}
+body{font-family:'Sarabun','Inter','Segoe UI',Tahoma,sans-serif;color:var(--tx);
+  background:var(--bg);padding:22px 18px 0;line-height:1.62;margin:0;
+  -webkit-font-smoothing:antialiased;font-size:14px}
+.wrap{max-width:1320px;margin:0 auto}
+
+/* ---------- app bar ---------- */
+.appbar{display:flex;justify-content:space-between;align-items:center;gap:16px;
+  flex-wrap:wrap;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:46px;height:46px;border-radius:13px;flex:0 0 46px;
+  background:linear-gradient(135deg,var(--acc),#9b6bff);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:15px;letter-spacing:.5px;box-shadow:0 6px 18px -8px var(--acc)}
+.brand h1{margin:0;font-size:21px;color:var(--ink);font-weight:800;letter-spacing:-.2px}
+.brand p{margin:1px 0 0;font-size:12px;color:var(--mut);letter-spacing:.2px}
+.ver{font-size:11px;font-weight:700;color:var(--acc);background:var(--acc-l);
+  padding:2px 8px;border-radius:20px;vertical-align:middle;margin-left:6px}
+
+/* ---------- cards ---------- */
+.card{background:var(--surface);padding:22px 24px;border-radius:var(--r);
+  border:1px solid var(--line);box-shadow:var(--sh);margin-bottom:18px}
+.chead{display:flex;align-items:baseline;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);
+  padding-bottom:12px;margin-bottom:18px}
+.chead h3{margin:0;font-size:16px;color:var(--ink);font-weight:800}
+.chead h3 span{display:block;font-size:10.5px;font-weight:700;color:var(--mut);
+  text-transform:uppercase;letter-spacing:1.1px;margin-top:1px}
+h2{color:var(--ink);margin:0 0 4px;font-size:20px}
+h3{color:var(--lb);margin:0 0 12px;font-size:16px}
+h4{color:var(--ink);margin:22px 0 9px;font-size:14px;font-weight:800;letter-spacing:-.1px}
 .sub{color:var(--mut);font-size:13px;margin:0 0 16px}
-button{background:var(--acc);color:#fff;border:0;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-family:inherit;font-size:14px}
-button:hover{background:#6d28d9}button:disabled{background:#cbd5e1;cursor:not-allowed}
-button.gh{background:#fff;color:var(--acc);border:1.5px solid var(--acc)}
-button.gh:hover{background:var(--acc-l)}button.sm{padding:7px 13px;font-size:12.5px}
-button.wn{background:var(--wn)}button.wn:hover{background:#b45309}
-button.bl{background:var(--bl)}button.bl:hover{background:#0369a1}
-select,input[type=number]{padding:8px 10px;border:1.5px solid var(--grid);border-radius:8px;font-family:inherit;font-size:14px;color:var(--tx);background:#fff}
-select{min-width:158px}input[type=number]{width:92px}
-label{display:block;font-size:12px;font-weight:700;color:var(--lb);margin-bottom:4px}
-.chk{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--lb);padding-bottom:9px}
-.row{display:flex;gap:14px;flex-wrap:wrap;align-items:end}
-.drop{border:2px dashed #cbd5e1;border-radius:12px;padding:18px;text-align:center;background:#fcfcfd;cursor:pointer;transition:.15s}
-.drop:hover{border-color:var(--acc);background:var(--acc-l)}.drop.ok{border-color:var(--ok);background:var(--ok-l)}
-.drop b{display:block;color:var(--lb);font-size:14px}.drop span{font-size:12px;color:var(--mut)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.g2{grid-template-columns:1fr}}
+
+/* ---------- accordion ---------- */
+details.sec{border:1px solid var(--line);border-radius:11px;margin-bottom:10px;
+  background:#fcfcfe;overflow:hidden}
+details.sec>summary{cursor:pointer;padding:12px 15px;font-weight:800;font-size:13.5px;
+  color:var(--ink);list-style:none;display:flex;align-items:center;gap:9px;
+  transition:background .15s}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::before{content:'▸';color:var(--acc);font-size:13px;
+  transition:transform .18s;display:inline-block}
+details.sec[open]>summary::before{transform:rotate(90deg)}
+details.sec>summary:hover{background:var(--acc-l)}
+details.sec>summary i{font-style:normal;font-size:10.5px;font-weight:700;color:var(--mut);
+  text-transform:uppercase;letter-spacing:.9px}
+details.sec .body{padding:4px 15px 15px}
+
+/* ---------- controls ---------- */
+button{background:var(--acc);color:#fff;border:0;padding:10px 18px;border-radius:9px;
+  cursor:pointer;font-weight:700;font-family:inherit;font-size:13.5px;transition:.15s}
+button:hover{background:var(--acc-d)}
+button:disabled{background:#d5d8e0;color:#8a90a0;cursor:not-allowed}
+button.gh{background:#fff;color:var(--acc);border:1.5px solid #d9d0ff}
+button.gh:hover{background:var(--acc-l)}
+button.sm{padding:7px 13px;font-size:12.5px}
+button.wn{background:var(--wn)}button.wn:hover{background:#a35f06}
+button.bl{background:var(--bl)}button.bl:hover{background:#095e9c}
+select,input[type=number]{padding:8px 11px;border:1.5px solid var(--line);border-radius:9px;
+  font-family:inherit;font-size:13.5px;color:var(--tx);background:#fff;transition:.15s}
+select:focus,input[type=number]:focus{border-color:var(--acc);outline:none;
+  box-shadow:0 0 0 3px var(--acc-l)}
+select{min-width:160px}input[type=number]{width:96px}
+label{display:block;font-size:11px;font-weight:800;color:var(--mut);margin-bottom:5px;
+  text-transform:uppercase;letter-spacing:.5px}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+  color:var(--lb);padding-bottom:9px}
+.chk input{width:16px;height:16px;accent-color:var(--acc)}
+.row{display:flex;gap:15px;flex-wrap:wrap;align-items:end}
+
+/* ---------- drop zone ---------- */
+.drop{border:1.5px dashed #cfd4e2;border-radius:12px;padding:20px;text-align:center;
+  background:#fbfbfe;cursor:pointer;transition:.15s}
+.drop:hover{border-color:var(--acc);background:var(--acc-l)}
+.drop.ok{border-color:var(--ok);background:var(--ok-l);border-style:solid}
+.drop.drag{border-color:var(--acc);background:var(--acc-l);transform:scale(1.01)}
+.drop b{display:block;color:var(--ink);font-size:14px}
+.drop span{font-size:12px;color:var(--mut)}
+.drop:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.g2{grid-template-columns:1fr}}
+
+/* ---------- tables ---------- */
 table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
-th,td{padding:8px 7px;border-bottom:1px solid var(--grid);text-align:center}
-th{background:#f8fafc;color:var(--lb);font-size:12px;font-weight:800;position:sticky;top:0;z-index:1}
-tr.sum{background:#f1f5f9;font-weight:800}tr.hl{background:#fff7ed}tr.best{background:#ecfdf5}
-.tag{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:800;display:inline-block}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:center}
+th{background:#f7f8fc;color:var(--ink);font-size:11px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;z-index:1}
+tbody tr:hover{background:#fafaff}
+tr.sum{background:#f4f5fa;font-weight:800}
+tr.hl{background:#fff8ee}tr.best{background:#eefaf2}
+.tag{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;display:inline-block}
 .t-ok{background:var(--ok-l);color:var(--ok)}.t-er{background:var(--er-l);color:var(--er)}
 .t-wn{background:var(--wn-l);color:var(--wn)}.t-ac{background:var(--acc-l);color:var(--acc)}
 .t-bl{background:var(--bl-l);color:var(--bl)}.t-tl{background:var(--tl-l);color:var(--tl)}
-.msg{padding:12px 14px;border-radius:10px;font-size:13.5px;margin-bottom:10px}
-.m-ok{background:var(--ok-l);color:#065f46}.m-wn{background:var(--wn-l);color:#92400e}
-.m-er{background:var(--er-l);color:#9f1239}.m-bl{background:var(--bl-l);color:#075985}
-.m-tl{background:var(--tl-l);color:#115e59}
-.scroll{overflow:auto;max-height:470px;border:1px solid var(--grid);border-radius:10px}
-.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin-bottom:14px}
-.kpi div{background:#f8fafc;border:1px solid var(--grid);border-radius:10px;padding:11px;text-align:center}
-.kpi b{display:block;font-size:21px;color:var(--acc);line-height:1.25}
-.kpi span{font-size:11px;color:var(--mut);font-weight:700}
+
+/* ---------- messages ---------- */
+.msg{padding:13px 15px;border-radius:11px;font-size:13.5px;margin-bottom:10px;
+  border:1px solid transparent}
+.m-ok{background:var(--ok-l);color:#08603a;border-color:#b9e7cd}
+.m-wn{background:var(--wn-l);color:#8a5206;border-color:#f4dcae}
+.m-er{background:var(--er-l);color:#9f1239;border-color:#f8c4d1}
+.m-bl{background:var(--bl-l);color:#075985;border-color:#bfdcf3}
+.m-tl{background:var(--tl-l);color:#0b5f59;border-color:#b6e6e1}
+.scroll{overflow:auto;max-height:480px;border:1px solid var(--line);border-radius:11px}
+
+/* ---------- KPI ---------- */
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px;margin-bottom:16px}
+.kpi div{background:#fbfbfe;border:1px solid var(--line);border-radius:11px;
+  padding:13px 14px;text-align:left;display:flex;flex-direction:column-reverse;gap:3px}
+.kpi b{display:block;font-size:22px;color:var(--ink);line-height:1.2;font-weight:800;
+  letter-spacing:-.4px}
+.kpi span{font-size:10px;color:var(--mut);font-weight:800;text-transform:uppercase;
+  letter-spacing:.7px;line-height:1.35}
 canvas{width:100%;display:block}
-.tabs{display:flex;gap:5px;flex-wrap:wrap;border-bottom:2px solid var(--grid);margin-bottom:16px}
-.tabs button{background:transparent;color:var(--mut);border:0;border-bottom:3px solid transparent;border-radius:0;padding:9px 11px;font-size:13px}
-.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
-.tabs button:hover{background:#f8fafc;color:var(--acc)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;
+  border-bottom:1px solid var(--line);margin-bottom:18px;scrollbar-width:thin}
+.tabs button{background:transparent;color:var(--mut);border:0;border-radius:9px 9px 0 0;
+  padding:9px 13px;font-size:13px;white-space:nowrap;border-bottom:2.5px solid transparent;
+  line-height:1.25;text-align:left}
+.tabs button span{display:block;font-size:9.5px;font-weight:700;letter-spacing:.7px;
+  text-transform:uppercase;opacity:.72;margin-top:1px}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-l)}
+.tabs button:hover{color:var(--acc);background:#f7f5ff}
+
+/* ---------- misc ---------- */
 .mono{font-family:ui-monospace,'Cascadia Code',Consolas,monospace;font-size:12px;letter-spacing:1.6px}
 .se{color:var(--mut);font-size:11px;font-weight:600}
-.badge{display:inline-block;background:var(--wn-l);color:#92400e;border:1px solid #fcd34d;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-left:8px}
-.badge.b2{background:var(--bl-l);color:#075985;border-color:#7dd3fc}
-.bar{height:10px;background:var(--grid);border-radius:6px;overflow:hidden;margin-top:8px}
-.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .2s}
-footer{text-align:center;padding:34px;color:var(--mut);font-size:13px;border-top:1px solid var(--grid);margin-top:30px}
+.badge{display:inline-block;background:var(--wn-l);color:#8a5206;border:1px solid #f0d097;
+  padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:700;margin-left:6px}
+.badge.b2{background:var(--bl-l);color:#075985;border-color:#a9d4f2}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:9px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),#9b6bff);
+  width:0;transition:width .2s}
+footer{text-align:center;padding:30px 12px;color:var(--mut);font-size:12.5px;
+  border-top:1px solid var(--line);margin-top:26px}
 .hide{display:none}
-.note{font-size:12px;color:var(--mut);line-height:1.6;margin-top:6px}
-.sep{height:1px;background:var(--grid);margin:18px 0}
-.cellf{display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;font-size:11px;font-weight:800}
+.note{font-size:12px;color:var(--mut);line-height:1.65;margin-top:8px;
+  background:#fafbfd;border-left:3px solid var(--line);padding:9px 12px;border-radius:0 8px 8px 0}
+.sep{height:1px;background:var(--line);margin:18px 0}
+.cellf{display:inline-block;width:26px;height:20px;line-height:20px;border-radius:4px;
+  font-size:11px;font-weight:800}
+@media print{
+  body{background:#fff;padding:0}.wrap{max-width:none}
+  .card{box-shadow:none;border:1px solid #cbd5e1;page-break-inside:avoid}
+  .tabs,button,.drop,#prog,#loadMsg,.appbar .badges{display:none!important}
+  details.sec{border:0}canvas{max-width:100%}th{position:static}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<div class="card">
-  <h2>CDA-GDINA Analyzer Pro
+<header class="appbar">
+  <div class="brand">
+    <div class="logo">CDA</div>
+    <div>
+      <h1>CDA-GDINA Analyzer <span class="ver">Pro v6.1</span></h1>
+      <p>Cognitive Diagnostic Assessment Workbench · G-DINA · MIRT · Deep-IRT</p>
+    </div>
+  </div>
+  <div class="badges">
     <span id="qBadge" class="badge hide">Q-Matrix ถูกปรับแล้ว</span>
-    <span id="mBadge" class="badge b2 hide">ใช้โมเดลรายข้อแบบผสม</span></h2>
-  <p class="sub">MML-EM · Higher-Order G-DINA · Iterative Q-Validation · Wald Test · Absolute Fit · Parametric Bootstrap · M₂ / RMSEA₂ · Cross-Validation</p>
+    <span id="mBadge" class="badge b2 hide">ใช้โมเดลรายข้อแบบผสม</span>
+  </div>
+</header>
 
+<div class="card">
+  <div class="chead"><h3>ขั้นที่ 1 · นำเข้าข้อมูล<span>Step 1 — Data Import</span></h3></div>
   <div class="g2">
     <div>
-      <div class="drop" id="dropR" onclick="document.getElementById('fR').click()">
-        <b>📄 Response Matrix (.csv)</b><span>แถว = ผู้เข้าสอบ · คอลัมน์ = ข้อสอบ (0/1)</span>
-        <div id="infoR" style="margin-top:7px;font-size:12px;color:var(--mut)">ยังไม่ได้เลือกไฟล์</div>
+      <div class="drop" id="dropR" role="button" tabindex="0" aria-label="เลือกหรือลากไฟล์ Response Matrix" onclick="document.getElementById('fR').click()">
+        <b>Response Matrix (.csv)</b><span>แถว = ผู้เข้าสอบ · คอลัมน์ = ข้อสอบ (0/1) — คลิกหรือลากไฟล์มาวาง</span>
+        <div id="infoR" style="margin-top:8px;font-size:12px;color:var(--mut)">ยังไม่ได้เลือกไฟล์</div>
       </div>
       <input type="file" id="fR" accept=".csv,.txt" class="hide" onchange="loadFile(this,'R')">
     </div>
     <div>
-      <div class="drop" id="dropQ" onclick="document.getElementById('fQ').click()">
-        <b>🧩 Q-Matrix (.csv)</b><span>แถว = ข้อสอบ · คอลัมน์ = มิติความสามารถ (0/1)</span>
-        <div id="infoQ" style="margin-top:7px;font-size:12px;color:var(--mut)">ยังไม่ได้เลือกไฟล์</div>
+      <div class="drop" id="dropQ" role="button" tabindex="0" aria-label="เลือกหรือลากไฟล์ Q-Matrix" onclick="document.getElementById('fQ').click()">
+        <b>Q-Matrix (.csv)</b><span>แถว = ข้อสอบ · คอลัมน์ = มิติความสามารถ (0/1) — คลิกหรือลากไฟล์มาวาง</span>
+        <div id="infoQ" style="margin-top:8px;font-size:12px;color:var(--mut)">ยังไม่ได้เลือกไฟล์</div>
       </div>
       <input type="file" id="fQ" accept=".csv,.txt" class="hide" onchange="loadFile(this,'Q')">
     </div>
   </div>
-
-  <h4>⚙️ โมเดล IRT ต่อเนื่อง (Scale Score)</h4>
-  <div class="row">
-    <div><label>Calibrate ข้อสอบ</label>
-      <select id="optCal"><option value="EM">MML-EM (Bock–Aitkin)</option><option value="HEUR">Heuristic</option></select></div>
-    <div><label>โมเดลข้อสอบ</label>
-      <select id="optModel"><option value="2PL">2PL (a, b)</option><option value="RASCH">Rasch / 1PL</option></select></div>
-    <div><label>ประมาณ θ</label>
-      <select id="optEst"><option value="EAP">EAP</option><option value="MLE">MLE</option></select></div>
-    <div><label>จุดตัด θ</label><input type="number" id="optCut" value="0" step="0.1"></div>
-    <div><label>รอบสูงสุด (EM)</label><input type="number" id="optIt" value="300" step="50" min="20"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="bl sm" onclick="useBuiltInSample()">ใช้ข้อมูลตัวอย่างทันที</button>
+    <button class="gh sm" onclick="genSampleR()">ดาวน์โหลดตัวอย่าง Response</button>
+    <button class="gh sm" onclick="genSampleQ()">ดาวน์โหลดตัวอย่าง Q-Matrix</button>
+    <button class="gh sm" onclick="genSampleQbad()">ดาวน์โหลดตัวอย่าง Q ที่ระบุผิด</button>
   </div>
+</div>
 
-  <h4>🧠 โมเดล G-DINA (Latent Class)</h4>
+<div class="card">
+  <div class="chead"><h3>ขั้นที่ 2 · ตั้งค่าโมเดล<span>Step 2 — Model Configuration</span></h3></div>
+
+  <details class="sec" open><summary>โมเดล IRT ต่อเนื่อง <i>Unidimensional IRT</i></summary>
+    <div class="body"><div class="row">
+      <div><label>Calibrate ข้อสอบ</label>
+        <select id="optCal"><option value="EM">MML-EM (Bock–Aitkin)</option><option value="HEUR">Heuristic</option></select></div>
+      <div><label>โมเดลข้อสอบ</label>
+        <select id="optModel"><option value="2PL">2PL (a, b)</option><option value="RASCH">Rasch / 1PL</option></select></div>
+      <div><label>ประมาณ θ</label>
+        <select id="optEst"><option value="EAP">EAP</option><option value="MLE">MLE</option></select></div>
+      <div><label>จุดตัด θ</label><input type="number" id="optCut" value="0" step="0.1"></div>
+      <div><label>รอบสูงสุด (EM)</label><input type="number" id="optIt" value="300" step="50" min="20"></div>
+    </div></div>
+  </details>
+
+  <details class="sec" open><summary>โมเดล G-DINA <i>Latent Class Diagnostic Model</i></summary>
+    <div class="body"><div class="row">
+      <div class="chk"><input type="checkbox" id="optGD" checked><span>เปิดใช้งาน G-DINA</span></div>
+      <div><label>ฟังก์ชันเชื่อมโยงตั้งต้น</label>
+        <select id="optGDM" onchange="clearMixed()"><option value="GDINA">G-DINA (Saturated)</option>
+        <option value="DINA">DINA</option><option value="DINO">DINO</option><option value="ACDM">ACDM</option></select></div>
+      <div><label>โครงสร้างคลาสแฝง</label>
+        <select id="optStruc"><option value="HO">Higher-Order (2K)</option><option value="SAT">Saturated (2^K − 1)</option></select></div>
+      <div class="chk"><input type="checkbox" id="optMono" checked><span>บังคับ Monotonicity</span></div>
+      <div><label>เกณฑ์ P(mastery) ≥</label><input type="number" id="optThr" value="0.70" step="0.05" min="0.5" max="0.99"></div>
+    </div></div>
+  </details>
+
+  <details class="sec"><summary>Q-Matrix และการเลือกโมเดลรายข้อ <i>Q-Validation &amp; Wald Test</i></summary>
+    <div class="body"><div class="row">
+      <div class="chk"><input type="checkbox" id="optQV" checked><span>GDI / PVAF</span></div>
+      <div class="chk"><input type="checkbox" id="optIter" checked><span>วนซ้ำจนผลนิ่ง</span></div>
+      <div><label>ค่าตัด PVAF (ε)</label><input type="number" id="optEps" value="0.95" step="0.01" min="0.5" max="0.999"></div>
+      <div><label>รอบสูงสุด (Q)</label><input type="number" id="optQR" value="10" step="1" min="2" max="40"></div>
+      <div><label>เกณฑ์เลือกรอบ</label>
+        <select id="optPick"><option value="BIC">BIC ต่ำสุด</option><option value="AIC">AIC ต่ำสุด</option><option value="LAST">รอบสุดท้าย</option></select></div>
+      <div class="chk"><input type="checkbox" id="optWald" checked><span>Wald Test รายข้อ</span></div>
+      <div><label>α</label><select id="optAlpha"><option value="0.05">0.05</option><option value="0.01">0.01</option><option value="0.10">0.10</option></select></div>
+      <div class="chk"><input type="checkbox" id="optBH"><span>ปรับ p ด้วย BH</span></div>
+      <div class="chk"><input type="checkbox" id="optAutoW"><span>ใช้โมเดลที่เลือกทันที</span></div>
+    </div></div>
+  </details>
+
+  <details class="sec"><summary>ความกลมกลืนสัมบูรณ์ · M₂ · Bootstrap <i>Absolute Fit</i></summary>
+    <div class="body"><div class="row">
+      <div class="chk"><input type="checkbox" id="optAF" checked><span>SRMSR / MADcor / max χ²</span></div>
+      <div class="chk"><input type="checkbox" id="optM2" checked><span>M₂ · RMSEA₂ · CFI₂ / TLI₂</span></div>
+      <div class="chk"><input type="checkbox" id="optBoot"><span>Parametric Bootstrap</span></div>
+      <div><label>จำนวนรอบ (B)</label>
+        <select id="optB"><option value="50">50 (เร็ว)</option><option value="100" selected>100 (มาตรฐาน)</option>
+        <option value="200">200 (ละเอียด)</option><option value="500">500 (ตีพิมพ์)</option></select></div>
+      <div><label>วิธี Bootstrap</label>
+        <select id="optBM"><option value="REFIT">Refit ทุกรอบ</option><option value="FIXED">ตรึงพารามิเตอร์</option></select></div>
+      <div><label>รอบ EM ต่อ replicate</label><input type="number" id="optBIt" value="120" step="20" min="20" max="600"></div>
+    </div></div>
+  </details>
+
+  <details class="sec"><summary>การแบ่งข้อมูล Calibration / Validation <i>Cross-Validation</i></summary>
+    <div class="body"><div class="row">
+      <div class="chk"><input type="checkbox" id="optCV"><span>เปิดใช้งาน Cross-Validation</span></div>
+      <div><label>รูปแบบการแบ่ง</label>
+        <select id="optCVM" onchange="cvModeUI()">
+          <option value="KFOLD">k-fold Cross-Validation</option>
+          <option value="HOLDOUT">Holdout (แบ่งครั้งเดียว)</option>
+          <option value="REPEAT">Repeated Holdout</option></select></div>
+      <div id="wrapK"><label>จำนวน fold (k)</label>
+        <select id="optK"><option value="2">2</option><option value="5" selected>5</option><option value="10">10</option></select></div>
+      <div id="wrapP" class="hide"><label>สัดส่วน calibration</label>
+        <input type="number" id="optProp" value="0.70" step="0.05" min="0.4" max="0.9"></div>
+      <div id="wrapR" class="hide"><label>จำนวนครั้งที่ทำซ้ำ</label>
+        <input type="number" id="optRep" value="10" step="1" min="2" max="50"></div>
+      <div class="chk"><input type="checkbox" id="optResel" checked><span>เลือก Q + โมเดลใหม่ในทุก fold</span></div>
+      <div><label>รอบ EM ต่อ fold</label><input type="number" id="optCVIt" value="150" step="25" min="30" max="600"></div>
+    </div></div>
+  </details>
+
+  <details class="sec"><summary>โมดูลโครงข่ายประสาทเทียม <i>Deep-IRT vs MIRT</i></summary>
+    <div class="body"><div class="row">
+      <div class="chk"><input type="checkbox" id="optNN"><span>เปิดใช้งาน Deep-IRT vs MIRT</span></div>
+      <div><label>สัดส่วนเซลล์ที่กันไว้ทดสอบ</label>
+        <input type="number" id="optNNMask" value="0.20" step="0.05" min="0.05" max="0.50"></div>
+      <div><label>จุด Monte Carlo (MIRT)</label>
+        <select id="optNNM"><option value="400">400 (เร็ว)</option><option value="600" selected>600 (มาตรฐาน)</option>
+        <option value="1000">1000 (ละเอียด)</option></select></div>
+      <div><label>รอบ EM (MIRT)</label><input type="number" id="optNNIt" value="100" step="10" min="20" max="400"></div>
+      <div><label>Epoch (Deep-IRT)</label><input type="number" id="optNNEp" value="150" step="25" min="20" max="800"></div>
+      <div><label>หน่วยซ่อน encoder</label>
+        <select id="optNNH"><option value="32">32</option><option value="64" selected>64</option><option value="128">128</option></select></div>
+      <div class="chk"><input type="checkbox" id="optNNGD" checked><span>เทียบกับ G-DINA ด้วย</span></div>
+    </div>
+    <div class="note">โมดูลนี้ประมาณค่าโมเดลทั้งหมดจากเซลล์ที่เหลือหลังสุ่มปิดบัง แล้ววัดความแม่นยำจากการทำนายเซลล์ที่ถูกปิดบัง
+      จึงเป็นการเปรียบเทียบแบบนอกกลุ่มตัวอย่าง (out-of-sample) ที่เทียบกันได้ตรง ๆ ระหว่างโมเดลเชิงพารามิเตอร์กับโครงข่ายประสาทเทียม</div>
+    </div>
+  </details>
+</div>
+
+<div class="card">
+  <div class="chead"><h3>ขั้นที่ 3 · ประมวลผล<span>Step 3 — Run Analysis</span></h3></div>
   <div class="row">
-    <div class="chk"><input type="checkbox" id="optGD" checked><span>เปิดใช้งาน G-DINA</span></div>
-    <div><label>ฟังก์ชันเชื่อมโยงตั้งต้น</label>
-      <select id="optGDM" onchange="clearMixed()"><option value="GDINA">G-DINA (Saturated)</option>
-      <option value="DINA">DINA</option><option value="DINO">DINO</option><option value="ACDM">ACDM</option></select></div>
-    <div><label>โครงสร้างคลาสแฝง</label>
-      <select id="optStruc"><option value="HO">Higher-Order (2K)</option><option value="SAT">Saturated (2^K − 1)</option></select></div>
-    <div class="chk"><input type="checkbox" id="optMono" checked><span>บังคับ Monotonicity</span></div>
-    <div><label>เกณฑ์ P(mastery) ≥</label><input type="number" id="optThr" value="0.70" step="0.05" min="0.5" max="0.99"></div>
-  </div>
-
-  <h4>🔍 Q-Matrix และการเลือกโมเดลรายข้อ</h4>
-  <div class="row">
-    <div class="chk"><input type="checkbox" id="optQV" checked><span>GDI / PVAF</span></div>
-    <div class="chk"><input type="checkbox" id="optIter" checked><span>วนซ้ำจนผลนิ่ง</span></div>
-    <div><label>ค่าตัด PVAF (ε)</label><input type="number" id="optEps" value="0.95" step="0.01" min="0.5" max="0.999"></div>
-    <div><label>รอบสูงสุด (Q)</label><input type="number" id="optQR" value="10" step="1" min="2" max="40"></div>
-    <div><label>เกณฑ์เลือกรอบ</label>
-      <select id="optPick"><option value="BIC">BIC ต่ำสุด</option><option value="AIC">AIC ต่ำสุด</option><option value="LAST">รอบสุดท้าย</option></select></div>
-    <div class="chk"><input type="checkbox" id="optWald" checked><span>Wald Test รายข้อ</span></div>
-    <div><label>α</label><select id="optAlpha"><option value="0.05">0.05</option><option value="0.01">0.01</option><option value="0.10">0.10</option></select></div>
-    <div class="chk"><input type="checkbox" id="optBH"><span>ปรับ p ด้วย BH</span></div>
-    <div class="chk"><input type="checkbox" id="optAutoW"><span>ใช้โมเดลที่เลือกทันที</span></div>
-  </div>
-
-  <h4>🎯 ความกลมกลืนสัมบูรณ์ · M₂ · Bootstrap</h4>
-  <div class="row">
-    <div class="chk"><input type="checkbox" id="optAF" checked><span>SRMSR / MADcor / max χ²</span></div>
-    <div class="chk"><input type="checkbox" id="optM2" checked><span>M₂ · RMSEA₂ · CFI₂ / TLI₂</span></div>
-    <div class="chk"><input type="checkbox" id="optBoot"><span>Parametric Bootstrap</span></div>
-    <div><label>จำนวนรอบ (B)</label>
-      <select id="optB"><option value="50">50 (เร็ว)</option><option value="100" selected>100 (มาตรฐาน)</option>
-      <option value="200">200 (ละเอียด)</option><option value="500">500 (ตีพิมพ์)</option></select></div>
-    <div><label>วิธี Bootstrap</label>
-      <select id="optBM"><option value="REFIT">Refit ทุกรอบ</option><option value="FIXED">ตรึงพารามิเตอร์</option></select></div>
-    <div><label>รอบ EM ต่อ replicate</label><input type="number" id="optBIt" value="120" step="20" min="20" max="600"></div>
-  </div>
-
-  <h4>🔀 โหมดแบ่งข้อมูล Calibration / Validation</h4>
-  <div class="row">
-    <div class="chk"><input type="checkbox" id="optCV"><span>เปิดใช้งาน Cross-Validation</span></div>
-    <div><label>รูปแบบการแบ่ง</label>
-      <select id="optCVM" onchange="cvModeUI()">
-        <option value="KFOLD">k-fold Cross-Validation</option>
-        <option value="HOLDOUT">Holdout (แบ่งครั้งเดียว)</option>
-        <option value="REPEAT">Repeated Holdout</option></select></div>
-    <div id="wrapK"><label>จำนวน fold (k)</label>
-      <select id="optK"><option value="2">2</option><option value="5" selected>5</option><option value="10">10</option></select></div>
-    <div id="wrapP" class="hide"><label>สัดส่วน calibration</label>
-      <input type="number" id="optProp" value="0.70" step="0.05" min="0.4" max="0.9"></div>
-    <div id="wrapR" class="hide"><label>จำนวนครั้งที่ทำซ้ำ</label>
-      <input type="number" id="optRep" value="10" step="1" min="2" max="50"></div>
-    <div class="chk"><input type="checkbox" id="optResel" checked><span>เลือก Q + โมเดลใหม่ในทุก fold</span></div>
-    <div><label>รอบ EM ต่อ fold</label><input type="number" id="optCVIt" value="150" step="25" min="30" max="600"></div>
-  </div>
-
-  <div class="row" style="margin-top:12px">
     <div><label>Random seed</label><input type="number" id="optSeed" value="20260901" step="1"></div>
-    <button id="btnRun" onclick="runAnalysis()" disabled>▶ เริ่มวิเคราะห์</button>
-    <button class="gh sm" onclick="genSampleR()">⬇ ตัวอย่าง Response</button>
-    <button class="gh sm" onclick="genSampleQ()">⬇ ตัวอย่าง Q-Matrix</button>
-    <button class="gh sm" onclick="genSampleQbad()">⬇ ตัวอย่าง Q ที่ระบุผิด</button>
+    <button id="btnRun" onclick="runAnalysis()" disabled>เริ่มวิเคราะห์ · Run</button>
   </div>
-  <div id="loadMsg" style="margin-top:12px"></div>
+  <div id="loadMsg" style="margin-top:14px"></div>
   <div id="prog" class="hide" style="margin-top:10px">
     <div class="msg m-bl" style="margin-bottom:6px">
-      <b id="progTitle">⏳ กำลังประมวลผล</b> — <span id="progTxt">เตรียมข้อมูล…</span>
+      <b id="progTitle">กำลังประมวลผล</b> — <span id="progTxt">เตรียมข้อมูล…</span>
       <div class="bar"><i id="progBar"></i></div>
     </div>
   </div>
 </div>
 
 <div class="card hide" id="pnlMain">
-  <div class="tabs">
-    <button id="tb-g" class="on" onclick="tab('g')">📈 ภาพรวมกลุ่ม</button>
-    <button id="tb-i" onclick="tab('i')">🔧 พารามิเตอร์ข้อสอบ</button>
-    <button id="tb-d" onclick="tab('d')">🧠 G-DINA</button>
-    <button id="tb-q" onclick="tab('q')">🔍 Q-Matrix</button>
-    <button id="tb-w" onclick="tab('w')">⚖️ Wald Test</button>
-    <button id="tb-f" onclick="tab('f')">🎯 ความกลมกลืนสัมบูรณ์</button>
-    <button id="tb-m" onclick="tab('m')">📐 M₂ / RMSEA₂</button>
-    <button id="tb-c" onclick="tab('c')">🔀 Cross-Validation</button>
-    <button id="tb-s" onclick="tab('s')">🧭 รายบุคคล</button>
+  <div class="tabs" role="tablist">
+    <button id="tb-g" class="on" onclick="tab('g')">ภาพรวมกลุ่ม<span>Overview</span></button>
+    <button id="tb-i" onclick="tab('i')">พารามิเตอร์ข้อสอบ<span>Item Parameters</span></button>
+    <button id="tb-d" onclick="tab('d')">G-DINA<span>Diagnostic Model</span></button>
+    <button id="tb-q" onclick="tab('q')">Q-Matrix<span>Validation</span></button>
+    <button id="tb-w" onclick="tab('w')">Wald Test<span>Model Selection</span></button>
+    <button id="tb-f" onclick="tab('f')">ความกลมกลืนสัมบูรณ์<span>Absolute Fit</span></button>
+    <button id="tb-m" onclick="tab('m')">M₂ / RMSEA₂<span>Limited Information</span></button>
+    <button id="tb-c" onclick="tab('c')">Cross-Validation<span>Out-of-sample</span></button>
+    <button id="tb-n" onclick="tab('n')">Deep-IRT vs MIRT<span>Neural Comparison</span></button>
+    <button id="tb-s" onclick="tab('s')">รายบุคคล<span>Individual Report</span></button>
   </div>
 
   <div id="pg-g">
@@ -207,6 +358,7 @@ footer{text-align:center;padding:34px;color:var(--mut);font-size:13px;border-top
   <div id="pg-f" class="hide"><div id="afWrap"></div></div>
   <div id="pg-m" class="hide"><div id="m2Wrap"></div></div>
   <div id="pg-c" class="hide"><div id="cvWrap"></div></div>
+  <div id="pg-n" class="hide"><div id="nnWrap"></div></div>
 
   <div id="pg-s" class="hide">
     <div class="row" style="margin-bottom:14px">
@@ -225,7 +377,7 @@ footer{text-align:center;padding:34px;color:var(--mut);font-size:13px;border-top
   </div>
 </div>
 
-<footer>© 2026 | Developed by ดร.ชัยมงคล ปินะสา คณะครุศาสตร์ มหาวิทยาลัยราชภัฏเลย | All rights reserved.</footer>
+<footer>CDA-GDINA Analyzer Pro v6.1 · © 2026 Developed by ดร.ชัยมงคล ปินะสา คณะครุศาสตร์ มหาวิทยาลัยราชภัฏเลย · All rights reserved.</footer>
 </div>
 
 <script>
@@ -235,7 +387,7 @@ footer{text-align:center;padding:34px;color:var(--mut);font-size:13px;border-top
 var S={attrNames:[],itemNames:[],students:[],ids:[],Q:null,X:null,ip:[],
   threshold:.70,cut:0,est:'EAP',model:'2PL',cal:'EM',struc:'HO',eps:.95,alpha:.05,
   raw:{R:null,Q:null},em:null,gd:null,qv:null,qvHist:null,wald:null,af:null,boot:null,
-  m2:null,cv:null,Qapplied:null,Qorig:null,linkOf:null,linkUsed:'GDINA',mono:true,maxIt:300,cfg:{}};
+  m2:null,cv:null,nn:null,Qapplied:null,Qorig:null,linkOf:null,linkUsed:'GDINA',mono:true,maxIt:300,cfg:{}};
 
 /* ==========================================================
    RNG
@@ -381,21 +533,50 @@ function looksHeader(r){return r.some(function(c){return c!==''&&!isFinite(Numbe
 function looksIdCol(rows,h){var st=h?1:0,bad=0,n=0;
   for(var i=st;i<rows.length;i++){var c=rows[i][0];if(c===undefined)continue;n++;if(!isBin(c))bad++;}
   return n>0&&bad/n>.5;}
-function loadFile(input,which){
-  var f=input.files&&input.files[0];if(!f)return;
+function acceptRows(rows,which,fname){
+  if(!rows||!rows.length)throw new Error('ไฟล์ว่างเปล่า');
+  S.raw[which]=rows;
+  if(which==='Q'){S.Qapplied=null;document.getElementById('qBadge').classList.add('hide');}
+  S.linkOf=null;document.getElementById('mBadge').classList.add('hide');
+  document.getElementById(which==='R'?'dropR':'dropQ').classList.add('ok');
+  document.getElementById(which==='R'?'infoR':'infoQ').innerHTML=
+    '✅ <b>'+fname+'</b> · '+rows.length+' แถว × '+rows[0].length+' คอลัมน์';
+  if(S.raw.R&&S.raw.Q)document.getElementById('btnRun').disabled=false;}
+function readFile(f,which){
+  if(!f)return;
+  if(!/\.(csv|txt|tsv)$/i.test(f.name)){msg('รองรับเฉพาะไฟล์ .csv .txt .tsv','er');return;}
   var rd=new FileReader();
   rd.onerror=function(){msg('อ่านไฟล์ไม่สำเร็จ','er');};
   rd.onload=function(e){try{
-    var rows=parseCSV(String(e.target.result));S.raw[which]=rows;
-    if(which==='Q'){S.Qapplied=null;document.getElementById('qBadge').classList.add('hide');}
-    S.linkOf=null;document.getElementById('mBadge').classList.add('hide');
-    document.getElementById(which==='R'?'dropR':'dropQ').classList.add('ok');
-    document.getElementById(which==='R'?'infoR':'infoQ').innerHTML=
-      '✅ <b>'+f.name+'</b> · '+rows.length+' แถว × '+rows[0].length+' คอลัมน์';
-    if(S.raw.R&&S.raw.Q)document.getElementById('btnRun').disabled=false;
+    acceptRows(parseCSV(String(e.target.result)),which,f.name);
     msg('โหลดไฟล์เรียบร้อย'+(S.raw.R&&S.raw.Q?' — กด "เริ่มวิเคราะห์" ได้เลย':' — รออีก 1 ไฟล์'),'ok');
   }catch(err){msg('ผิดพลาด: '+err.message,'er');}};
   rd.readAsText(f,'UTF-8');}
+function loadFile(input,which){
+  var f=input.files&&input.files[0];
+  readFile(f,which);
+  input.value='';}
+function initDrop(){
+  [['dropR','fR','R'],['dropQ','fQ','Q']].forEach(function(o){
+    var box=document.getElementById(o[0]);if(!box)return;
+    box.addEventListener('keydown',function(ev){
+      if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();document.getElementById(o[1]).click();}});
+    ['dragenter','dragover'].forEach(function(t){box.addEventListener(t,function(ev){
+      ev.preventDefault();ev.stopPropagation();box.classList.add('drag');});});
+    ['dragleave','dragend'].forEach(function(t){box.addEventListener(t,function(ev){
+      ev.preventDefault();ev.stopPropagation();box.classList.remove('drag');});});
+    box.addEventListener('drop',function(ev){
+      ev.preventDefault();ev.stopPropagation();box.classList.remove('drag');
+      var f=ev.dataTransfer&&ev.dataTransfer.files&&ev.dataTransfer.files[0];
+      if(f)readFile(f,o[2]);else msg('ไม่พบไฟล์ที่ลากมาวาง','er');});});
+  ['dragover','drop'].forEach(function(t){
+    window.addEventListener(t,function(ev){ev.preventDefault();},false);});}
+function useBuiltInSample(){
+  try{
+    acceptRows(parseCSV(sampleRcsv()),'R','sample_responses.csv (ในโปรแกรม)');
+    acceptRows(parseCSV(sampleQcsv(false)),'Q','sample_qmatrix.csv (ในโปรแกรม)');
+    msg('โหลดชุดข้อมูลจำลองในโปรแกรมแล้ว — ผู้เข้าสอบ 800 คน · ข้อสอบ 20 ข้อ · 4 มิติ (สร้างจากโมเดลผสม DINA/DINO/ACDM/G-DINA) — กด "เริ่มวิเคราะห์" ได้เลย','ok');
+  }catch(err){msg('สร้างข้อมูลตัวอย่างไม่สำเร็จ: '+err.message,'er');}}
 function msg(t,k){document.getElementById('loadMsg').innerHTML='<div class="msg m-'+(k||'ok')+'">'+t+'</div>';}
 function clearMixed(){S.linkOf=null;document.getElementById('mBadge').classList.add('hide');}
 function cvModeUI(){
@@ -1337,13 +1518,14 @@ function doAnalysis(){
       useM2=document.getElementById('optM2').checked,
       useBoot=document.getElementById('optBoot').checked,
       useCV=document.getElementById('optCV').checked,
+      useNN=document.getElementById('optNN').checked,
       baseLink=document.getElementById('optGDM').value,
       pick=document.getElementById('optPick').value;
 
   var warn=buildData();
   if(S.cal==='EM')calibrateEM(S.maxIt);else{calibrateHeuristic();S.em=null;}
 
-  S.gd=null;S.qv=null;S.qvHist=null;S.wald=null;S.af=null;S.boot=null;S.m2=null;S.cv=null;
+  S.gd=null;S.qv=null;S.qvHist=null;S.wald=null;S.af=null;S.boot=null;S.m2=null;S.cv=null;S.nn=null;
   var link=S.linkOf?S.linkOf:baseLink;S.linkUsed=link;
   if(useGD){
     if(useQV&&useIter){
@@ -1400,22 +1582,26 @@ function doAnalysis(){
   var chain=[];
   if(useGD&&useBoot&&useAF)chain.push(function(next){startBootstrap(next);});
   if(useGD&&useCV)chain.push(function(next){startCV(next);});
+  if(useNN)chain.push(function(next){startNeural(next);});
   (function runChain(i){
     if(i>=chain.length){
       msg(base+
         (S.boot?'<br>· Bootstrap '+S.boot.B+' รอบ — p(SRMSR) = '+S.boot.fit.srmsr.p.toFixed(3):'')+
         (S.cv?'<br>· Cross-Validation '+S.cv.nSplit+' ชุด ('+S.cv.sec+' วินาที) — CV log-lik/คน = '+
-          S.cv.avg.llVal.toFixed(4)+' · CV Pa = '+(S.cv.avg.Pa*100).toFixed(1)+'%':''),
+          S.cv.avg.llVal.toFixed(4)+' · CV Pa = '+(S.cv.avg.Pa*100).toFixed(1)+'%':'')+
+        (S.nn&&!S.nn.err?'<br>· Deep-IRT vs MIRT ('+S.nn.sec+' วินาที) — '+
+          S.nn.models.map(function(o){return o.key+' AUC '+(isFinite(o.ev.auc)?o.ev.auc.toFixed(3):'–');}).join(' · '):'')+
+        (S.nn&&S.nn.err?'<br>· Deep-IRT vs MIRT: '+S.nn.err:''),
         warn.length?'wn':'ok');
       document.getElementById('btnRun').disabled=false;return;}
     chain[i](function(){runChain(i+1);});})(0);}
 
 function renderAll(){
   renderGroup();renderItemTable();renderGDINA();renderQV();renderWald();
-  renderAF();renderM2();renderCV();renderDiag();}
+  renderAF();renderM2();renderCV();renderNeural();renderDiag();}
 
 function tab(t){
-  ['g','i','d','q','w','f','m','c','s'].forEach(function(x){
+  ['g','i','d','q','w','f','m','c','n','s'].forEach(function(x){
     document.getElementById('pg-'+x).classList.toggle('hide',x!==t);
     document.getElementById('tb-'+x).classList.toggle('on',x===t);});
   if(t==='s'){var s=curStu();if(s){drawAbilityChart('cvAbility',s);drawMastery('cvMastery',s);}}
@@ -1424,7 +1610,8 @@ function tab(t){
   if(t==='q'&&S.qv){drawPVAF('cvPvaf');if(S.qvHist)drawBIC('cvBic');}
   if(t==='f'&&S.af){drawResid('cvResid');if(S.boot)drawBootDist('cvBoot');}
   if(t==='m'&&S.m2&&!S.m2.err)drawRmsea('cvRmsea');
-  if(t==='c'&&S.cv)drawCVGap('cvGap');}
+  if(t==='c'&&S.cv)drawCVGap('cvGap');
+  if(t==='n'&&S.nn&&!S.nn.err){drawROC('cvROC');drawELBO('cvELBO');}}
 
 /* ==========================================================
    RENDER — GROUP
@@ -1488,7 +1675,7 @@ function drawHist(id,vals){
     if(c){x.fillStyle='#334155';x.font='bold 11px Sarabun,sans-serif';x.textAlign='center';x.fillText(c,bx+bwd/2,by-5);}
     x.fillStyle='#64748b';x.font='11px Sarabun,sans-serif';x.fillText(Math.round(lo+bw*i),bx+bwd/2,H-pB+17);});
   x.fillStyle='#1e293b';x.font='bold 12.5px Sarabun,sans-serif';x.textAlign='left';
-  x.fillText('การกระจายของ Scale Score (50 + 10(θ))',pL,pT-9);}
+  x.fillText('การกระจายของ Scale Score (50 + 10θ)',pL,pT-9);}
 
 function renderItemTable(){
   var em=(S.cal==='EM');
@@ -2441,7 +2628,8 @@ function printReport(){
     '<td class="l">RMSEA₂ (90% CI)</td><td>'+S.m2.rmsea.toFixed(4)+' ['+S.m2.lo.toFixed(4)+', '+
     S.m2.hi.toFixed(4)+']</td></tr>'):'';
   var cvLine=S.cv?('<tr><td class="l">การตรวจสอบข้ามกลุ่ม</td><td>'+
-    (S.cv.mode==='KFOLD'?S.cv.k+'-fold':'Holdout')+' · '+S.cv.nSplit+' ชุด</td>'+
+    (S.cv.mode==='KFOLD'?S.cv.k+'-fold':(S.cv.mode==='REPEAT'?'Repeated holdout':'Holdout'))+
+    ' · '+S.cv.nSplit+' ชุด</td>'+
     '<td class="l">ความแม่นการจำแนกนอกกลุ่ม</td><td>P<sub>a</sub> = '+(S.cv.avg.Pa*100).toFixed(2)+
     '% · P<sub>c</sub> = '+(S.cv.avg.Pc*100).toFixed(2)+'%</td></tr>'):'';
   var html='<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>รายงาน '+stu.id+
@@ -2466,7 +2654,7 @@ function printReport(){
    '<td>'+(isFinite(stu.gTheta)?stu.gTheta.toFixed(3):'–')+'</td><td class="ss">'+SS.fmt(stu.gTheta)+'</td>'+
    '<td>'+(cg?cg[0].toFixed(1)+'–'+cg[1].toFixed(1):'–')+'</td><td>'+SS.band(stu.gTheta).label+'</td>'+
    '<td>–</td>'+(mg?'<td>–</td><td class="mono">['+S.gd.map[i].join('')+']</td>':'')+'<td>–</td></tr></tbody></table>'+
-   '<p class="note">หมายเหตุ: Scale Score = 50 + 10(θ) (M = 50, SD = 10) ปรับช่วง 20–80 คะแนน · '+
+   '<p class="note">หมายเหตุ: Scale Score = 50 + 10θ (M = 50, SD = 10) ปรับช่วง 20–80 คะแนน · '+
    (S.m2&&!S.m2.err&&S.m2.rmsea>.08?'<b>คำเตือน:</b> RMSEA₂ = '+S.m2.rmsea.toFixed(3)+
      ' สูงกว่าเกณฑ์ .08 โมเดลยังกลมกลืนกับข้อมูลไม่ดีพอ ควรตีความผลด้วยความระมัดระวัง'
     :'โมเดลผ่านการตรวจสอบความกลมกลืนในระดับที่ยอมรับได้')+'</p>'+
@@ -2480,7 +2668,10 @@ function printReport(){
    '</body></html>';
   var w=window.open('','_blank','width=940,height=760');
   if(!w){alert('เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตแล้วลองใหม่');return;}
-  w.document.write(html);w.document.close();w.onload=function(){w.focus();w.print();};}
+  w.document.write(html);w.document.close();
+  var printed=false,go=function(){if(printed)return;printed=true;
+    try{w.focus();w.print();}catch(e){}};
+  w.onload=go;setTimeout(go,700);}
 
 function dl(name,txt){
   var b=new Blob(['\uFEFF'+txt],{type:'text/csv;charset=utf-8;'});
@@ -2555,6 +2746,618 @@ function exportCSV(){
   setTimeout(function(){dl('cda_fit_summary_'+Date.now()+'.csv',h3);},800);}
 
 /* ==========================================================
+   MODULE: MIRT (Confirmatory M2PL, Monte Carlo EM)
+   + Deep-IRT (Variational Autoencoder IRT, ELBO)
+   + Held-out cell prediction comparison
+   ========================================================== */
+
+/* ---------- Monte Carlo quadrature nodes ~ N(0, I_K) ---------- */
+function mcNodes(K,M){
+  var nd=[],m,k;
+  for(m=0;m<M;m++){var r=new Float64Array(K);
+    for(k=0;k<K;k++)r[k]=gaussR();nd.push(r);}
+  for(k=0;k<K;k++){var s=0,s2=0;
+    for(m=0;m<M;m++)s+=nd[m][k];
+    var mu=s/M;
+    for(m=0;m<M;m++)s2+=(nd[m][k]-mu)*(nd[m][k]-mu);
+    var sg=Math.sqrt(s2/M)||1;
+    for(m=0;m<M;m++)nd[m][k]=(nd[m][k]-mu)/sg;}
+  return nd;}
+
+/* ---------- MIRT : initialise ---------- */
+function mirtInit(X,Q,opt){
+  opt=opt||{};
+  var N=X.length,J=Q.length,K=Q[0].length;
+  var M=opt.M||clamp(Math.round(220+140*K),320,1400);
+  var st={X:X,Q:Q,N:N,J:J,K:K,M:M,maxIt:opt.maxIt||120,
+    nodes:mcNodes(K,M),A:[],D:new Float64Array(J),idxk:[],
+    ll:-Infinity,prev:-Infinity,it:0,conv:false,dmax:NaN,hist:[],done:false};
+  for(var j=0;j<J;j++){
+    var ks=[];for(var k=0;k<K;k++)if(Q[j][k]===1)ks.push(k);
+    st.idxk.push(ks);
+    var a=new Float64Array(K);
+    for(var t=0;t<ks.length;t++)a[ks[t]]=0.8;
+    st.A.push(a);
+    var n=0,c=0;
+    for(var i=0;i<N;i++){var v=X[i][j];if(v===null)continue;n++;if(v===1)c++;}
+    var p=clamp(n?c/n:.5,.02,.98);st.D[j]=Math.log(p/(1-p));}
+  st.lp=[];st.lq=[];
+  for(var j2=0;j2<J;j2++){st.lp.push(new Float64Array(M));st.lq.push(new Float64Array(M));}
+  return st;}
+
+function mirtProbs(st){
+  var J=st.J,M=st.M;
+  for(var j=0;j<J;j++){var aj=st.A[j],dj=st.D[j],ks=st.idxk[j];
+    for(var m=0;m<M;m++){var z=dj,nd=st.nodes[m];
+      for(var t=0;t<ks.length;t++)z+=aj[ks[t]]*nd[ks[t]];
+      var P=clamp(1/(1+Math.exp(-z)),1e-9,1-1e-9);
+      st.lp[j][m]=Math.log(P);st.lq[j][m]=Math.log(1-P);}}}
+
+/* ---------- MIRT : one EM iteration ---------- */
+function mirtIter(st){
+  if(st.done)return true;
+  var N=st.N,J=st.J,M=st.M,X=st.X;
+  mirtProbs(st);
+  var njm=[],rjm=[],j,m;
+  for(j=0;j<J;j++){njm.push(new Float64Array(M));rjm.push(new Float64Array(M));}
+  var ll=0,w=new Float64Array(M);
+  for(var i=0;i<N;i++){
+    var row=X[i],mx=-Infinity;
+    for(m=0;m<M;m++){var s=0;
+      for(j=0;j<J;j++){var x=row[j];if(x===null)continue;s+=x===1?st.lp[j][m]:st.lq[j][m];}
+      w[m]=s;if(s>mx)mx=s;}
+    var sum=0;for(m=0;m<M;m++){w[m]=Math.exp(w[m]-mx);sum+=w[m];}
+    ll+=mx+Math.log(sum/M);
+    for(m=0;m<M;m++){var po=w[m]/sum;if(po<1e-12)continue;
+      for(j=0;j<J;j++){var x2=row[j];if(x2===null)continue;
+        njm[j][m]+=po;if(x2===1)rjm[j][m]+=po;}}}
+  st.ll=ll;
+  var dmax=0;
+  for(j=0;j<J;j++){
+    var ks=st.idxk[j],d0=ks.length+1,beta=new Float64Array(d0),t;
+    for(t=0;t<ks.length;t++)beta[t]=st.A[j][ks[t]];
+    beta[d0-1]=st.D[j];
+    for(var step=0;step<12;step++){
+      var g=new Float64Array(d0),Hm=new Float64Array(d0*d0);
+      for(m=0;m<M;m++){
+        var nw=njm[j][m];if(nw<1e-11)continue;
+        var rw=rjm[j][m],nd=st.nodes[m],z=beta[d0-1];
+        for(t=0;t<ks.length;t++)z+=beta[t]*nd[ks[t]];
+        var P=clamp(1/(1+Math.exp(-z)),1e-9,1-1e-9),res=rw-nw*P,wg=nw*P*(1-P);
+        for(var t1=0;t1<d0;t1++){
+          var z1=(t1<ks.length)?nd[ks[t1]]:1;
+          g[t1]+=res*z1;
+          for(var t2=0;t2<d0;t2++){
+            var z2=(t2<ks.length)?nd[ks[t2]]:1;
+            Hm[t1*d0+t2]+=wg*z1*z2;}}}
+      for(t=0;t<d0;t++)Hm[t*d0+t]+=1e-6;
+      var piv=luFactor(Hm,d0);if(!piv)break;
+      var del=luSolve(Hm,piv,d0,Array.prototype.slice.call(g)),mv=0;
+      for(t=0;t<d0;t++){var dv=clamp(del[t],-1,1);beta[t]+=dv;mv=Math.max(mv,Math.abs(dv));}
+      for(t=0;t<ks.length;t++)beta[t]=clamp(beta[t],-3.5,3.5);
+      beta[d0-1]=clamp(beta[d0-1],-6,6);
+      if(mv<1e-7)break;}
+    for(t=0;t<ks.length;t++){dmax=Math.max(dmax,Math.abs(beta[t]-st.A[j][ks[t]]));st.A[j][ks[t]]=beta[t];}
+    dmax=Math.max(dmax,Math.abs(beta[d0-1]-st.D[j]));st.D[j]=beta[d0-1];}
+  st.dmax=dmax;st.it++;
+  st.hist.push({it:st.it,ll:ll,d:dmax});
+  if(dmax<1e-4&&Math.abs(ll-st.prev)<1e-5){st.conv=true;st.done=true;}
+  else if(st.it>=st.maxIt)st.done=true;
+  st.prev=ll;
+  return st.done;}
+
+function mirtFinish(st){
+  mirtProbs(st);
+  var npar=0;for(var j=0;j<st.J;j++)npar+=st.idxk[j].length+1;
+  return{name:'MIRT',K:st.K,J:st.J,N:st.N,M:st.M,nodes:st.nodes,A:st.A,D:st.D,
+    idxk:st.idxk,lp:st.lp,lq:st.lq,ll:st.ll,it:st.it,conv:st.conv,hist:st.hist,
+    npar:npar,aic:-2*st.ll+2*npar,bic:-2*st.ll+npar*Math.log(st.N)};}
+
+/* posterior over MC nodes for one response vector */
+function mirtPost(Mo,row){
+  var M=Mo.M,J=Mo.J,w=new Float64Array(M),mx=-Infinity,m,j;
+  for(m=0;m<M;m++){var s=0;
+    for(j=0;j<J;j++){var x=row[j];if(x===null)continue;s+=x===1?Mo.lp[j][m]:Mo.lq[j][m];}
+    w[m]=s;if(s>mx)mx=s;}
+  var sum=0;for(m=0;m<M;m++){w[m]=Math.exp(w[m]-mx);sum+=w[m];}
+  for(m=0;m<M;m++)w[m]/=sum;
+  return w;}
+function mirtTheta(Mo,post){
+  var K=Mo.K,M=Mo.M,th=new Array(K).fill(0),v=new Array(K).fill(0),m,k;
+  for(m=0;m<M;m++){var p=post[m];if(p<1e-12)continue;
+    for(k=0;k<K;k++)th[k]+=p*Mo.nodes[m][k];}
+  for(m=0;m<M;m++){var p2=post[m];if(p2<1e-12)continue;
+    for(k=0;k<K;k++){var d=Mo.nodes[m][k]-th[k];v[k]+=p2*d*d;}}
+  return{th:th,se:v.map(function(x){return Math.sqrt(Math.max(x,1e-6));})};}
+function mirtCellP(Mo,post,j){
+  var M=Mo.M,s=0;
+  for(var m=0;m<M;m++){var p=post[m];if(p<1e-12)continue;s+=p*Math.exp(Mo.lp[j][m]);}
+  return s;}
+
+/* ==========================================================
+   Deep-IRT : VAE with IRT decoder trained on the ELBO
+   encoder  : [x, mask] -> H -> (mu, logvar) of theta (K dims)
+   decoder  : logit_j = a_j . theta (masked by Q) + d_j + v_j . tanh(W2 theta + b2)
+   ========================================================== */
+function nnParam(rows,cols,scale){
+  var n=rows*cols,w=new Float64Array(n);
+  for(var i=0;i<n;i++)w[i]=(rnd()*2-1)*scale;
+  return{w:w,g:new Float64Array(n),m:new Float64Array(n),v:new Float64Array(n),n:n};}
+function nnZeroGrad(ps){ps.forEach(function(p){p.g.fill(0);});}
+function nnAdam(ps,lr,t,wd){
+  var b1=0.9,b2=0.999,eps=1e-8;
+  var c1=1-Math.pow(b1,t),c2=1-Math.pow(b2,t);
+  ps.forEach(function(p){
+    for(var i=0;i<p.n;i++){
+      var g=p.g[i]+(wd||0)*p.w[i];
+      p.m[i]=b1*p.m[i]+(1-b1)*g;
+      p.v[i]=b2*p.v[i]+(1-b2)*g*g;
+      p.w[i]-=lr*(p.m[i]/c1)/(Math.sqrt(p.v[i]/c2)+eps);}});}
+
+function deepInit(X,Q,opt){
+  opt=opt||{};
+  var N=X.length,J=Q.length,K=Q[0].length;
+  var H=opt.H||64,H2=opt.H2||16;
+  var st={X:X,Q:Q,N:N,J:J,K:K,H:H,H2:H2,
+    epochs:opt.epochs||150,bs:Math.min(opt.bs||64,N),lr:opt.lr||0.01,
+    ep:0,t:0,hist:[],done:false,elbo:NaN};
+  st.W1=nnParam(H,2*J,Math.sqrt(1/(2*J)));st.b1=nnParam(H,1,0);
+  st.Wm=nnParam(K,H,Math.sqrt(1/H));st.bm=nnParam(K,1,0);
+  st.Wv=nnParam(K,H,Math.sqrt(1/H));st.bv=nnParam(K,1,0);
+  st.W2=nnParam(H2,K,Math.sqrt(1/Math.max(K,1)));st.b2=nnParam(H2,1,0);
+  st.Ad=nnParam(J,K,0.3);st.dd=nnParam(J,1,0);st.V=nnParam(J,H2,Math.sqrt(1/H2));
+  st.qmask=new Float64Array(J*K);
+  for(var j=0;j<J;j++)for(var k=0;k<K;k++)st.qmask[j*K+k]=Q[j][k]===1?1:0;
+  for(var i2=0;i2<J*K;i2++)st.Ad.w[i2]*=st.qmask[i2];
+  for(var j2=0;j2<J;j2++){
+    var n=0,c=0;
+    for(var i=0;i<N;i++){var v=X[i][j2];if(v===null)continue;n++;if(v===1)c++;}
+    var p=clamp(n?c/n:.5,.02,.98);st.dd.w[j2]=Math.log(p/(1-p));}
+  st.ps=[st.W1,st.b1,st.Wm,st.bm,st.Wv,st.bv,st.W2,st.b2,st.Ad,st.dd,st.V];
+  st.inp=[];
+  for(var i3=0;i3<N;i3++){
+    var vv=new Float64Array(2*J),row=X[i3];
+    for(var j3=0;j3<J;j3++){var x=row[j3];
+      if(x===null){vv[2*j3]=0;vv[2*j3+1]=0;}
+      else{vv[2*j3]=(x===1?1:-1);vv[2*j3+1]=1;}}
+    st.inp.push(vv);}
+  return st;}
+
+/* encoder forward for one person */
+function deepEnc(st,vv){
+  var H=st.H,K=st.K,J2=2*st.J,h1=new Float64Array(H),i,k,d;
+  for(i=0;i<H;i++){var s=st.b1.w[i];
+    for(d=0;d<J2;d++)s+=st.W1.w[i*J2+d]*vv[d];
+    h1[i]=Math.tanh(s);}
+  var mu=new Float64Array(K),lv=new Float64Array(K);
+  for(k=0;k<K;k++){var sm=st.bm.w[k],sv=st.bv.w[k];
+    for(i=0;i<H;i++){sm+=st.Wm.w[k*H+i]*h1[i];sv+=st.Wv.w[k*H+i]*h1[i];}
+    mu[k]=sm;lv[k]=clamp(sv,-8,4);}
+  return{h1:h1,mu:mu,lv:lv};}
+
+/* decoder forward : theta -> logits */
+function deepDec(st,th){
+  var J=st.J,K=st.K,H2=st.H2,hd=new Float64Array(H2),j,k,h;
+  for(h=0;h<H2;h++){var s=st.b2.w[h];
+    for(k=0;k<K;k++)s+=st.W2.w[h*K+k]*th[k];
+    hd[h]=Math.tanh(s);}
+  var lg=new Float64Array(J);
+  for(j=0;j<J;j++){var z=st.dd.w[j];
+    for(k=0;k<K;k++){var a=st.Ad.w[j*K+k];if(a)z+=a*th[k];}
+    for(h=0;h<H2;h++)z+=st.V.w[j*H2+h]*hd[h];
+    lg[j]=z;}
+  return{hd:hd,lg:lg};}
+
+/* one training epoch (mini-batch Adam on -ELBO) */
+function deepEpoch(st){
+  if(st.done)return true;
+  var N=st.N,J=st.J,K=st.K,H=st.H,H2=st.H2,J2=2*J;
+  var ord=shuffled(N),bs=st.bs,tot=0,nc=0,klSum=0;
+  for(var b0=0;b0<N;b0+=bs){
+    var idx=ord.slice(b0,b0+bs),nb=idx.length;
+    nnZeroGrad(st.ps);
+    for(var q=0;q<nb;q++){
+      var i=idx[q],row=st.X[i],vv=st.inp[i];
+      var e=deepEnc(st,vv),mu=e.mu,lv=e.lv,h1=e.h1;
+      var eps=new Float64Array(K),th=new Float64Array(K),k,j,h;
+      for(k=0;k<K;k++){eps[k]=gaussR();th[k]=mu[k]+Math.exp(0.5*lv[k])*eps[k];}
+      var dec=deepDec(st,th),hd=dec.hd,lg=dec.lg;
+      var dlg=new Float64Array(J);
+      for(j=0;j<J;j++){var x=row[j];if(x===null){dlg[j]=0;continue;}
+        var p=clamp(1/(1+Math.exp(-lg[j])),1e-9,1-1e-9);
+        tot+=-(x===1?Math.log(p):Math.log(1-p));nc++;
+        dlg[j]=(p-(x===1?1:0));}
+      var kl=0;
+      for(k=0;k<K;k++)kl+=-0.5*(1+lv[k]-mu[k]*mu[k]-Math.exp(lv[k]));
+      klSum+=kl;
+      /* ---- backward ---- */
+      var dhd=new Float64Array(H2),dth=new Float64Array(K);
+      for(j=0;j<J;j++){var d=dlg[j];if(!d)continue;
+        st.dd.g[j]+=d;
+        for(k=0;k<K;k++)if(st.qmask[j*K+k]){st.Ad.g[j*K+k]+=d*th[k];dth[k]+=d*st.Ad.w[j*K+k];}
+        for(h=0;h<H2;h++){st.V.g[j*H2+h]+=d*hd[h];dhd[h]+=d*st.V.w[j*H2+h];}}
+      for(h=0;h<H2;h++){var dz2=dhd[h]*(1-hd[h]*hd[h]);
+        st.b2.g[h]+=dz2;
+        for(k=0;k<K;k++){st.W2.g[h*K+k]+=dz2*th[k];dth[k]+=dz2*st.W2.w[h*K+k];}}
+      var dmu=new Float64Array(K),dlv=new Float64Array(K);
+      for(k=0;k<K;k++){
+        dmu[k]=dth[k]+mu[k];
+        dlv[k]=dth[k]*0.5*Math.exp(0.5*lv[k])*eps[k]+0.5*(Math.exp(lv[k])-1);}
+      var dh1=new Float64Array(H);
+      for(k=0;k<K;k++){
+        st.bm.g[k]+=dmu[k];st.bv.g[k]+=dlv[k];
+        for(h=0;h<H;h++){
+          st.Wm.g[k*H+h]+=dmu[k]*h1[h];st.Wv.g[k*H+h]+=dlv[k]*h1[h];
+          dh1[h]+=dmu[k]*st.Wm.w[k*H+h]+dlv[k]*st.Wv.w[k*H+h];}}
+      for(h=0;h<H;h++){var dz1=dh1[h]*(1-h1[h]*h1[h]);
+        st.b1.g[h]+=dz1;
+        for(var d2=0;d2<J2;d2++)if(vv[d2])st.W1.g[h*J2+d2]+=dz1*vv[d2];}}
+    for(var pi=0;pi<st.ps.length;pi++){
+      var P=st.ps[pi];for(var gi=0;gi<P.n;gi++)P.g[gi]/=nb;}
+    st.t++;nnAdam(st.ps,st.lr,st.t,1e-5);
+    for(var mi=0;mi<J*K;mi++)st.Ad.w[mi]*=st.qmask[mi];}
+  st.ep++;
+  st.elbo=-(tot+klSum)/N;
+  st.hist.push({ep:st.ep,elbo:st.elbo,bce:nc?tot/nc:NaN});
+  if(st.ep>=st.epochs)st.done=true;
+  return st.done;}
+
+function deepFinish(st){
+  return{name:'Deep-IRT',K:st.K,J:st.J,N:st.N,H:st.H,H2:st.H2,
+    epochs:st.ep,elbo:st.elbo,hist:st.hist,st:st,
+    npar:st.ps.reduce(function(s,p){return s+p.n;},0)};}
+
+/* posterior-predictive probability for one person (S samples) */
+function deepPredictRow(Mo,vv,S){
+  var st=Mo.st,K=st.K,J=st.J,e=deepEnc(st,vv),out=new Float64Array(J),s,k,j;
+  S=S||24;
+  for(s=0;s<S;s++){
+    var th=new Float64Array(K);
+    for(k=0;k<K;k++)th[k]=e.mu[k]+Math.exp(0.5*e.lv[k])*gaussR();
+    var lg=deepDec(st,th).lg;
+    for(j=0;j<J;j++)out[j]+=clamp(1/(1+Math.exp(-lg[j])),1e-9,1-1e-9);}
+  for(j=0;j<J;j++)out[j]/=S;
+  return{p:out,mu:Array.prototype.slice.call(e.mu),
+    sd:Array.prototype.slice.call(e.lv).map(function(v){return Math.exp(0.5*v);})};}
+function deepInputRow(J,row){
+  var vv=new Float64Array(2*J);
+  for(var j=0;j<J;j++){var x=row[j];
+    if(x===null){vv[2*j]=0;vv[2*j+1]=0;}else{vv[2*j]=(x===1?1:-1);vv[2*j+1]=1;}}
+  return vv;}
+
+/* ---------- G-DINA posterior predictive (for the same comparison) ---------- */
+function gdinaPostRow(G,row){
+  var C=G.C,J=G.grp.length,lw=new Float64Array(C),mx=-Infinity,c,j;
+  for(c=0;c<C;c++){var s=Math.log(Math.max(G.pi[c],1e-300));
+    for(j=0;j<J;j++){var x=row[j];if(x===null)continue;
+      var p=clamp(G.items[j].P[G.grp[j][c]],1e-6,1-1e-6);
+      s+=x===1?Math.log(p):Math.log(1-p);}
+    lw[c]=s;if(s>mx)mx=s;}
+  var sum=0;for(c=0;c<C;c++){lw[c]=Math.exp(lw[c]-mx);sum+=lw[c];}
+  for(c=0;c<C;c++)lw[c]/=sum;
+  return lw;}
+function gdinaCellP(G,post,j){
+  var C=G.C,s=0;
+  for(var c=0;c<C;c++){var p=post[c];if(p<1e-12)continue;
+    s+=p*G.items[j].P[G.grp[j][c]];}
+  return s;}
+
+/* ==========================================================
+   Held-out CELL masking + prediction metrics
+   ========================================================== */
+function maskCells(X,frac,minKeep){
+  var N=X.length,J=X[0].length,cells=[],i,j;
+  for(i=0;i<N;i++)for(j=0;j<J;j++)if(X[i][j]!==null)cells.push([i,j]);
+  var nTot=cells.length,nMask=Math.round(nTot*frac);
+  var ord=shuffled(nTot),Xt=X.map(function(r){return r.slice();});
+  var rowN=new Array(N).fill(0),colN=new Array(J).fill(0);
+  for(i=0;i<nTot;i++){rowN[cells[i][0]]++;colN[cells[i][1]]++;}
+  var held=[],mk=minKeep||3;
+  for(i=0;i<nTot&&held.length<nMask;i++){
+    var c=cells[ord[i]],r=c[0],q=c[1];
+    if(rowN[r]<=mk||colN[q]<=mk*2)continue;
+    Xt[r][q]=null;rowN[r]--;colN[q]--;held.push([r,q,X[r][q]]);}
+  return{Xtrain:Xt,held:held,nTot:nTot};}
+
+function auc(ps,ys){
+  var n=ps.length,idx=[],i;
+  for(i=0;i<n;i++)idx.push(i);
+  idx.sort(function(a,b){return ps[a]-ps[b];});
+  var rank=new Array(n),i0=0;
+  while(i0<n){var i1=i0;
+    while(i1+1<n&&ps[idx[i1+1]]===ps[idx[i0]])i1++;
+    var rr=(i0+i1)/2+1;
+    for(i=i0;i<=i1;i++)rank[idx[i]]=rr;
+    i0=i1+1;}
+  var n1=0,n0=0,sr=0;
+  for(i=0;i<n;i++){if(ys[i]===1){n1++;sr+=rank[i];}else n0++;}
+  if(!n1||!n0)return NaN;
+  return (sr-n1*(n1+1)/2)/(n1*n0);}
+
+function evalCells(ps,ys){
+  var n=ps.length,acc=0,ll=0,br=0,i;
+  for(i=0;i<n;i++){
+    var p=clamp(ps[i],1e-9,1-1e-9),y=ys[i];
+    if((p>=.5?1:0)===y)acc++;
+    ll+=-(y===1?Math.log(p):Math.log(1-p));
+    br+=(p-y)*(p-y);}
+  return{n:n,acc:n?acc/n:NaN,logloss:n?ll/n:NaN,brier:n?br/n:NaN,auc:auc(ps,ys)};}
+
+function rocCurve(ps,ys,nPt){
+  nPt=nPt||60;var pts=[],t;
+  var P=0,Ng=0,i;
+  for(i=0;i<ys.length;i++){if(ys[i]===1)P++;else Ng++;}
+  for(t=0;t<=nPt;t++){
+    var th=t/nPt,tp=0,fp=0;
+    for(i=0;i<ps.length;i++){if(ps[i]>=th){if(ys[i]===1)tp++;else fp++;}}
+    pts.push({x:Ng?fp/Ng:0,y:P?tp/P:0});}
+  return pts;}
+
+/* ==========================================================
+   MODULE UI : Deep-IRT vs MIRT
+   ========================================================== */
+function pearson(a,b){
+  var n=0,sa=0,sb=0,i;
+  for(i=0;i<a.length;i++)if(isFinite(a[i])&&isFinite(b[i])){n++;sa+=a[i];sb+=b[i];}
+  if(n<3)return NaN;
+  var ma=sa/n,mb=sb/n,num=0,va=0,vb=0;
+  for(i=0;i<a.length;i++)if(isFinite(a[i])&&isFinite(b[i])){
+    var da=a[i]-ma,db=b[i]-mb;num+=da*db;va+=da*da;vb+=db*db;}
+  return (va>1e-12&&vb>1e-12)?num/Math.sqrt(va*vb):NaN;}
+
+function startNeural(done){
+  var frac=clamp(+document.getElementById('optNNMask').value||.2,.05,.5),
+      Mq=clamp(+document.getElementById('optNNM').value||600,200,2000),
+      itM=clamp(+document.getElementById('optNNIt').value||100,20,400),
+      ep=clamp(+document.getElementById('optNNEp').value||150,20,800),
+      Hh=clamp(+document.getElementById('optNNH').value||64,8,256),
+      withGD=document.getElementById('optNNGD').checked;
+  var t0=performance.now(),J=S.Q.length,K=S.attrNames.length;
+  var mk=maskCells(S.X,frac,3);
+  if(mk.held.length<30){
+    S.nn={err:'จำนวนเซลล์ที่กันไว้ทดสอบน้อยเกินไป ('+mk.held.length+' เซลล์) — ต้องมีอย่างน้อย 30 เซลล์'};
+    prog('','',0,false);renderNeural();if(done)done();return;}
+
+  var mSt=mirtInit(mk.Xtrain,S.Q,{M:Mq,maxIt:itM}),dSt=null,Gtr=null,phase=0;
+  step();
+
+  function step(){
+    var tc=performance.now();
+    try{
+      if(phase===0){
+        while(performance.now()-tc<130){if(mirtIter(mSt))break;}
+        var pc=Math.round(45*mSt.it/mSt.maxIt);
+        prog('🧬 Deep-IRT vs MIRT','กำลังประมาณค่า MIRT ด้วย Monte Carlo EM — รอบที่ '+mSt.it+' / '+mSt.maxIt,pc);
+        if(mSt.done){phase=1;dSt=deepInit(mk.Xtrain,S.Q,{epochs:ep,H:Hh});}
+        setTimeout(step,0);return;}
+      if(phase===1){
+        while(performance.now()-tc<130){if(deepEpoch(dSt))break;}
+        var pc2=45+Math.round(45*dSt.ep/dSt.epochs);
+        prog('🧬 Deep-IRT vs MIRT','กำลังฝึก Deep-IRT (VAE / ELBO) — epoch '+dSt.ep+' / '+dSt.epochs+
+          ' · ELBO = '+(isFinite(dSt.elbo)?dSt.elbo.toFixed(3):'–'),pc2);
+        if(dSt.done)phase=2;
+        setTimeout(step,0);return;}
+      if(phase===2){
+        prog('🧬 Deep-IRT vs MIRT','กำลังประมาณค่า G-DINA บนข้อมูลชุดฝึกเพื่อเปรียบเทียบ',92);
+        if(withGD&&S.gd)Gtr=fitGDINA(S.linkUsed,S.mono,Math.min(S.maxIt,200),S.struc,mk.Xtrain,true);
+        phase=3;setTimeout(step,0);return;}
+      finish();
+    }catch(e){
+      S.nn={err:'คำนวณไม่สำเร็จ: '+e.message};
+      prog('','',0,false);renderNeural();if(done)done();}}
+
+  function finish(){
+    prog('🧬 Deep-IRT vs MIRT','กำลังทำนายเซลล์ที่กันไว้และคำนวณดัชนีความแม่นยำ',96);
+    var Mo=mirtFinish(mSt),Do=deepFinish(dSt),N=S.X.length;
+    var byRow={},h,i;
+    for(h=0;h<mk.held.length;h++){var r=mk.held[h][0];(byRow[r]=byRow[r]||[]).push(h);}
+    var yy=[],pM=[],pD=[],pG=[],pB=[];
+    /* baseline : สัดส่วนตอบถูกรายข้อจากชุดฝึก */
+    var base=new Float64Array(J);
+    for(var j=0;j<J;j++){var n=0,c=0;
+      for(i=0;i<N;i++){var v=mk.Xtrain[i][j];if(v===null)continue;n++;if(v===1)c++;}
+      base[j]=clamp(n?c/n:.5,1e-4,1-1e-4);}
+    var thM=[],thD=[];
+    for(i=0;i<N;i++){thM.push(null);thD.push(null);}
+    for(var rk in byRow){
+      var ri=+rk,row=mk.Xtrain[ri];
+      var post=mirtPost(Mo,row),tm=mirtTheta(Mo,post);
+      var dp=deepPredictRow(Do,deepInputRow(J,row),24);
+      var gpost=Gtr?gdinaPostRow(Gtr,row):null;
+      thM[ri]=tm.th;thD[ri]=dp.mu;
+      byRow[rk].forEach(function(hi){
+        var cell=mk.held[hi],jj=cell[1],y=cell[2];
+        yy.push(y);
+        pM.push(mirtCellP(Mo,post,jj));
+        pD.push(dp.p[jj]);
+        pB.push(base[jj]);
+        if(gpost)pG.push(gdinaCellP(Gtr,gpost,jj));});}
+    var models=[
+      {key:'MIRT',label:'MIRT (Confirmatory M2PL)',est:'Monte Carlo EM · MML',
+       npar:Mo.npar,ll:Mo.ll,aic:Mo.aic,bic:Mo.bic,ev:evalCells(pM,yy),roc:rocCurve(pM,yy),color:'#7c3aed'},
+      {key:'DEEP',label:'Deep-IRT (VAE-IRT)',est:'Amortised VI · ELBO (Adam)',
+       npar:Do.npar,ll:NaN,aic:NaN,bic:NaN,ev:evalCells(pD,yy),roc:rocCurve(pD,yy),color:'#0284c7'}];
+    if(pG.length===yy.length&&pG.length)
+      models.push({key:'GDINA',label:'G-DINA (Latent Class)',est:'MML-EM',
+        npar:Gtr.npar,ll:Gtr.ll,aic:Gtr.aic,bic:Gtr.bic,ev:evalCells(pG,yy),roc:rocCurve(pG,yy),color:'#0d9488'});
+    models.push({key:'BASE',label:'Baseline (สัดส่วนตอบถูกรายข้อ)',est:'ไม่มีตัวแปรแฝง',
+      npar:J,ll:NaN,aic:NaN,bic:NaN,ev:evalCells(pB,yy),roc:rocCurve(pB,yy),color:'#94a3b8'});
+
+    var corr=[];
+    for(var k=0;k<K;k++){
+      var a=[],b=[];
+      for(i=0;i<N;i++){if(!thM[i]||!thD[i])continue;a.push(thM[i][k]);b.push(thD[i][k]);}
+      corr.push({k:k,r:pearson(a,b),n:a.length});}
+
+    S.nn={frac:frac,held:mk.held.length,nTot:mk.nTot,models:models,y:yy,
+      mirt:Mo,deep:Do,gdina:Gtr,corr:corr,thM:thM,thD:thD,
+      sec:((performance.now()-t0)/1000).toFixed(1)};
+    prog('','',0,false);renderNeural();if(done)done();}}
+
+/* ---------- RENDER ---------- */
+function renderNeural(){
+  var host=document.getElementById('nnWrap');
+  if(!S.nn){host.innerHTML='<div class="msg m-wn">ยังไม่ได้เปิดใช้งานโมดูล Deep-IRT vs MIRT — '+
+    'เลือกที่หัวข้อ “โมดูลโครงข่ายประสาทเทียม” ก่อนกดเริ่มวิเคราะห์</div>';return;}
+  if(S.nn.err){host.innerHTML='<div class="msg m-er">'+S.nn.err+'</div>';return;}
+  var R=S.nn,ms=R.models.slice();
+  var best=ms.filter(function(o){return o.key!=='BASE';})
+             .sort(function(a,b){return (b.ev.auc||0)-(a.ev.auc||0);})[0];
+  var bestAcc=ms.slice().sort(function(a,b){return (b.ev.acc||0)-(a.ev.acc||0);})[0];
+
+  var h='<div class="kpi">'+
+    '<div><b>'+R.held.toLocaleString()+'</b><span>เซลล์ที่กันไว้ทดสอบ / HELD-OUT CELLS</span></div>'+
+    '<div><b>'+(R.frac*100).toFixed(0)+'%</b><span>สัดส่วนที่กันไว้ / MASK RATE</span></div>'+
+    '<div><b style="font-size:15px">'+best.key+'</b><span>AUC สูงสุด / BEST AUC</span></div>'+
+    '<div><b>'+(best.ev.auc*100).toFixed(1)+'%</b><span>AUC ของโมเดลที่ดีที่สุด</span></div>'+
+    '<div><b>'+(bestAcc.ev.acc*100).toFixed(1)+'%</b><span>ความแม่นยำสูงสุด / ACCURACY</span></div>'+
+    '<div><b>'+R.sec+' s</b><span>เวลาที่ใช้ / RUNTIME</span></div></div>';
+
+  h+='<h4>ตารางเปรียบเทียบความแม่นยำในการทำนายเซลล์ที่กันไว้ · Held-out Cell Prediction</h4>'+
+    '<table><thead><tr><th style="text-align:left">โมเดล / Model</th><th>วิธีประมาณค่า</th>'+
+    '<th>พารามิเตอร์</th><th>Accuracy</th><th>AUC</th><th>Log-loss</th><th>Brier</th>'+
+    '<th>log L</th><th>AIC</th><th>BIC</th></tr></thead><tbody>';
+  ms.forEach(function(o){
+    var isB=(o.key===best.key);
+    h+='<tr'+(isB?' class="best"':'')+'><td style="text-align:left;font-weight:700">'+o.label+
+      (isB?' <span class="tag t-ok">ดีที่สุด</span>':'')+'</td>'+
+      '<td style="font-size:11.5px;color:var(--mut)">'+o.est+'</td>'+
+      '<td>'+o.npar.toLocaleString()+'</td>'+
+      '<td style="font-weight:800;color:var(--acc)">'+(o.ev.acc*100).toFixed(2)+'%</td>'+
+      '<td style="font-weight:700">'+(isFinite(o.ev.auc)?o.ev.auc.toFixed(4):'–')+'</td>'+
+      '<td>'+o.ev.logloss.toFixed(4)+'</td><td>'+o.ev.brier.toFixed(4)+'</td>'+
+      '<td>'+(isFinite(o.ll)?o.ll.toFixed(1):'–')+'</td>'+
+      '<td>'+(isFinite(o.aic)?o.aic.toFixed(1):'–')+'</td>'+
+      '<td>'+(isFinite(o.bic)?o.bic.toFixed(1):'–')+'</td></tr>';});
+  h+='</tbody></table>'+
+    '<div class="note"><b>วิธีเปรียบเทียบ:</b> สุ่มปิดบังคำตอบ '+(R.frac*100).toFixed(0)+'% ของเซลล์ที่มีข้อมูล '+
+    '(รวม '+R.held.toLocaleString()+' เซลล์ จากทั้งหมด '+R.nTot.toLocaleString()+' เซลล์) '+
+    'ประมาณค่าทุกโมเดลจากเซลล์ที่เหลือ แล้วให้ทำนายเซลล์ที่ถูกปิดบัง ตัวเลขทุกค่าคำนวณจากข้อมูลจริง ไม่มีการจำลองค่าใด ๆ<br>'+
+    '<b>ข้อจำกัดที่ต้องระบุ:</b> AIC และ BIC ของ Deep-IRT ไม่รายงาน เนื่องจากโมเดลประมาณค่าด้วย ELBO '+
+    'ซึ่งเป็นขอบล่างของ log-likelihood จึงไม่สามารถเทียบกับ AIC/BIC ของ MIRT และ G-DINA ได้โดยตรง · '+
+    'จำนวนพารามิเตอร์ของ Deep-IRT นับรวมน้ำหนักของโครงข่าย encoder ซึ่งไม่ใช่พารามิเตอร์เชิงโครงสร้างแบบเดียวกับ MIRT</div>';
+
+  h+='<div class="g2" style="margin-top:18px"><div>'+
+    '<h4>เส้นโค้ง ROC บนเซลล์ที่กันไว้</h4><canvas id="cvROC" height="330"></canvas></div>'+
+    '<div><h4>เส้นทางการฝึก Deep-IRT (ELBO ต่อ epoch)</h4><canvas id="cvELBO" height="330"></canvas></div></div>';
+
+  h+='<h4>ความสอดคล้องของค่าประมาณความสามารถแฝง θ ระหว่าง MIRT กับ Deep-IRT</h4>'+
+    '<table><thead><tr><th style="text-align:left">มิติความสามารถ</th><th>n</th>'+
+    '<th>สหสัมพันธ์ r</th><th>การแปลผล</th></tr></thead><tbody>';
+  R.corr.forEach(function(o){
+    var r=o.r,lab=!isFinite(r)?'ไม่พอข้อมูล':(Math.abs(r)>=.8?'สอดคล้องสูง':(Math.abs(r)>=.5?'สอดคล้องปานกลาง':'สอดคล้องต่ำ'));
+    var tg=!isFinite(r)?'t-wn':(Math.abs(r)>=.8?'t-ok':(Math.abs(r)>=.5?'t-bl':'t-er'));
+    h+='<tr><td style="text-align:left;font-weight:700">'+S.attrNames[o.k]+'</td><td>'+o.n+'</td>'+
+      '<td style="font-weight:800">'+(isFinite(r)?r.toFixed(3):'–')+'</td>'+
+      '<td><span class="tag '+tg+'">'+lab+'</span></td></tr>';});
+  h+='</tbody></table>'+
+    '<div class="note">คำนวณจากผู้เข้าสอบที่มีเซลล์ถูกกันไว้ทดสอบ โดยเทียบ EAP ของ MIRT กับค่าเฉลี่ยหลัง (μ) '+
+    'จาก encoder ของ Deep-IRT ทั้งสองโมเดลใช้ Q-Matrix ชุดเดียวกันกำหนดว่ามิติใดวัดในข้อใด<br>'+
+    '<b>ข้อควรระวังในการตีความ:</b> มิติแฝงของ Deep-IRT มีความไม่แน่นอนด้านทิศทางและมาตร '+
+    '(sign and scale indeterminacy) ค่า r ที่เป็นลบไม่ได้แปลว่าขัดแย้งกัน แต่หมายถึงแกนกลับทิศ '+
+    'การแปลผลจึงพิจารณาจากขนาดสัมบูรณ์ |r| เป็นหลัก</div>';
+
+  h+='<h4>พารามิเตอร์ข้อสอบจาก MIRT (a = ค่าอำนาจจำแนกรายมิติ, d = ค่าตัดสิน)</h4><div class="scroll"><table><thead><tr>'+
+    '<th style="text-align:left">ข้อ</th>';
+  S.attrNames.forEach(function(nm){h+='<th>a · '+nm+'</th>';});
+  h+='<th>d</th><th>MDISC</th><th>MDIFF</th></tr></thead><tbody>';
+  for(var j=0;j<R.mirt.J;j++){
+    var ss=0;
+    for(var k2=0;k2<R.mirt.K;k2++)ss+=R.mirt.A[j][k2]*R.mirt.A[j][k2];
+    var md=Math.sqrt(ss);
+    h+='<tr><td style="text-align:left;font-weight:700">'+S.itemNames[j]+'</td>';
+    for(var k3=0;k3<R.mirt.K;k3++){var a=R.mirt.A[j][k3];
+      h+='<td'+(S.Q[j][k3]===1?' style="font-weight:700;color:var(--acc)"':' class="se"')+'>'+
+        (S.Q[j][k3]===1?a.toFixed(3):'–')+'</td>';}
+    h+='<td>'+R.mirt.D[j].toFixed(3)+'</td><td>'+md.toFixed(3)+'</td>'+
+      '<td>'+(md>1e-6?(-R.mirt.D[j]/md).toFixed(3):'–')+'</td></tr>';}
+  h+='</tbody></table></div>'+
+    '<div class="note">MDISC = √Σa² · MDIFF = −d / MDISC ตามนิยามของ Reckase (2009) · '+
+    'ช่องที่แสดง “–” คือมิติที่ Q-Matrix กำหนดว่าไม่ได้วัดในข้อนั้น จึงตรึงค่า a ไว้ที่ 0<br>'+
+    '<b>ข้อจำกัด:</b> โมเดลนี้กำหนดให้มิติแฝงเป็นอิสระต่อกัน θ ~ N(0, I) ยังไม่ได้ประมาณเมทริกซ์สหสัมพันธ์ระหว่างมิติ</div>';
+
+  h+='<div class="row" style="margin-top:14px">'+
+    '<button class="gh sm" onclick="dlNeural()">⬇ ส่งออกผลเปรียบเทียบ (CSV)</button></div>';
+  host.innerHTML=h;
+  requestAnimationFrame(function(){drawROC('cvROC');drawELBO('cvELBO');});}
+
+/* ---------- CHARTS ---------- */
+function drawROC(id){
+  var cv=document.getElementById(id);if(!cv||!S.nn||S.nn.err)return;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||620,H=330;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=48,pR=14,pT=16,pB=42,iw=W-pL-pR,ih=H-pT-pB;
+  x.font='11px Sarabun,sans-serif';
+  for(var t=0;t<=5;t++){
+    var yy=pT+ih*t/5,xx=pL+iw*t/5;
+    x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.beginPath();x.moveTo(xx,pT);x.lineTo(xx,H-pB);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';x.fillText((1-t/5).toFixed(1),pL-6,yy+4);
+    x.textAlign='center';x.fillText((t/5).toFixed(1),xx,H-pB+16);}
+  x.strokeStyle='#cbd5e1';x.setLineDash([4,4]);
+  x.beginPath();x.moveTo(pL,H-pB);x.lineTo(W-pR,pT);x.stroke();x.setLineDash([]);
+  var lx=pL+10,ly=pT+12;
+  S.nn.models.forEach(function(o){
+    x.strokeStyle=o.color;x.lineWidth=2.2;x.beginPath();
+    o.roc.forEach(function(p,i){var px=pL+iw*p.x,py=pT+ih*(1-p.y);
+      if(i===0)x.moveTo(px,py);else x.lineTo(px,py);});
+    x.stroke();
+    x.fillStyle=o.color;x.fillRect(W-pR-152,ly-8,10,10);
+    x.textAlign='left';x.font='bold 11px Sarabun,sans-serif';
+    x.fillText(o.key+'  AUC '+(isFinite(o.ev.auc)?o.ev.auc.toFixed(3):'–'),W-pR-137,ly+1);
+    ly+=16;});
+  x.fillStyle='#1e293b';x.font='bold 11.5px Sarabun,sans-serif';x.textAlign='center';
+  x.fillText('False Positive Rate',pL+iw/2,H-8);
+  x.save();x.translate(13,pT+ih/2);x.rotate(-Math.PI/2);
+  x.fillText('True Positive Rate',0,0);x.restore();}
+
+function drawELBO(id){
+  var cv=document.getElementById(id);if(!cv||!S.nn||S.nn.err)return;
+  var hs=S.nn.deep.hist;if(!hs||!hs.length)return;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||620,H=330;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=62,pR=16,pT=18,pB=42,iw=W-pL-pR,ih=H-pT-pB;
+  var vs=hs.map(function(o){return o.elbo;}).filter(isFinite);
+  var lo=Math.min.apply(null,vs),hi=Math.max.apply(null,vs),rg=(hi-lo)||1;
+  lo-=rg*.08;hi+=rg*.08;
+  x.font='11px Sarabun,sans-serif';
+  for(var t=0;t<=4;t++){
+    var yy=pT+ih*t/4;x.strokeStyle='#e2e8f0';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#64748b';x.textAlign='right';
+    x.fillText((hi-(hi-lo)*t/4).toFixed(1),pL-6,yy+4);}
+  x.strokeStyle='#0284c7';x.lineWidth=2.2;x.beginPath();
+  hs.forEach(function(o,i){
+    var px=pL+iw*(hs.length>1?i/(hs.length-1):0),
+        py=pT+ih*(1-(o.elbo-lo)/(hi-lo));
+    if(i===0)x.moveTo(px,py);else x.lineTo(px,py);});
+  x.stroke();
+  x.fillStyle='#1e293b';x.font='bold 11.5px Sarabun,sans-serif';x.textAlign='center';
+  x.fillText('Epoch (1 – '+hs.length+')',pL+iw/2,H-8);
+  x.textAlign='left';x.fillStyle='#64748b';x.font='11px Sarabun,sans-serif';
+  x.fillText('ELBO สุดท้าย = '+hs[hs.length-1].elbo.toFixed(3),pL+8,pT+14);}
+
+function dlNeural(){
+  if(!S.nn||S.nn.err){alert('ยังไม่มีผลการเปรียบเทียบ');return;}
+  var R=S.nn;
+  var t='Model,Estimation,nParam,HeldoutCells,Accuracy,AUC,LogLoss,Brier,logLik,AIC,BIC\n';
+  R.models.forEach(function(o){
+    t+='"'+o.label+'","'+o.est+'",'+o.npar+','+o.ev.n+','+f4(o.ev.acc)+','+f4(o.ev.auc)+','+
+      f4(o.ev.logloss)+','+f4(o.ev.brier)+','+f4(o.ll)+','+f4(o.aic)+','+f4(o.bic)+'\n';});
+  t+='\nAttribute,n,r_MIRT_DeepIRT\n';
+  R.corr.forEach(function(o){t+='"'+S.attrNames[o.k]+'",'+o.n+','+f4(o.r)+'\n';});
+  t+='\nItem,'+S.attrNames.map(function(n){return 'a_'+n;}).join(',')+',d\n';
+  for(var j=0;j<R.mirt.J;j++){
+    var r=[S.itemNames[j]];
+    for(var k=0;k<R.mirt.K;k++)r.push(S.Q[j][k]===1?f4(R.mirt.A[j][k]):'');
+    r.push(f4(R.mirt.D[j]));
+    t+=r.join(',')+'\n';}
+  dl('deepirt_vs_mirt_'+Date.now()+'.csv',t);}
+
+/* ==========================================================
    SAMPLE DATA
 ========================================================== */
 var SQ=[[1,0,0,0],[1,0,0,0],[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0],[1,0,1,0],
@@ -2562,17 +3365,15 @@ var SQ=[[1,0,0,0],[1,0,0,0],[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0],[1
         [1,0,0,1],[0,1,0,1],[1,1,1,0],[0,1,1,1]];
 var GEN=['D','D','D','DINA','D','D','D','DINO','D','D','D','ACDM','D','D','D','DINA',
          'DINO','ACDM','GDINA','GDINA'];
-function genSampleQ(){
+function sampleQcsv(bad){
+  var M=SQ.map(function(r){return r.slice();});
+  if(bad){M[2]=[0,1,0,0];M[8]=[0,0,1,1];M[12]=[1,0,0,0];M[18]=[1,0,0,0];}
   var t='Item,การบวก-ลบ,การคูณ-หาร,เศษส่วน,การแก้โจทย์\n';
-  SQ.forEach(function(r,i){t+='I'+(i+1)+','+r.join(',')+'\n';});
-  dl('sample_qmatrix.csv',t);}
-function genSampleQbad(){
-  var B=SQ.map(function(r){return r.slice();});
-  B[2]=[0,1,0,0];B[8]=[0,0,1,1];B[12]=[1,0,0,0];B[18]=[1,0,0,0];
-  var t='Item,การบวก-ลบ,การคูณ-หาร,เศษส่วน,การแก้โจทย์\n';
-  B.forEach(function(r,i){t+='I'+(i+1)+','+r.join(',')+'\n';});
-  dl('sample_qmatrix_misspecified.csv',t);}
-function genSampleR(){
+  M.forEach(function(r,i){t+='I'+(i+1)+','+r.join(',')+'\n';});
+  return t;}
+function genSampleQ(){dl('sample_qmatrix.csv',sampleQcsv(false));}
+function genSampleQbad(){dl('sample_qmatrix_misspecified.csv',sampleQcsv(true));}
+function sampleRcsv(){
   RNG.seed(20260901);
   var N=800,J=SQ.length,hdr=['ID'];for(var j=0;j<J;j++)hdr.push('I'+(j+1));
   var rows=[hdr.join(',')],lam=[{a:1.6,b:-.6},{a:1.4,b:-.1},{a:1.5,b:.3},{a:1.3,b:.7}];
@@ -2592,8 +3393,20 @@ function genSampleR(){
       x.push(rnd()<clamp(p,.02,.98)?1:0);}
     if(x[8]===1&&rnd()<.22)x[9]=1;
     rows.push(r.concat(x).join(','));}
-  dl('sample_responses.csv',rows.join('\n'));}
-cvModeUI();
+  return rows.join('\n');}
+function genSampleR(){dl('sample_responses.csv',sampleRcsv());}
+
+/* ==========================================================
+   INIT + ตัวดักข้อผิดพลาดระดับหน้าเว็บ
+========================================================== */
+window.addEventListener('error',function(ev){
+  try{
+    prog('','',0,false);
+    var b=document.getElementById('btnRun');if(b)b.disabled=!(S.raw.R&&S.raw.Q);
+    msg('❌ เกิดข้อผิดพลาดระหว่างประมวลผล: '+(ev.message||'ไม่ทราบสาเหตุ')+
+      '<br>แนะนำให้ลดจำนวนมิติ จำนวนรอบ Bootstrap หรือจำนวน fold แล้วเริ่มวิเคราะห์ใหม่','er');
+  }catch(e){}});
+cvModeUI();initDrop();
 </script>
       <script language=JavaScript>
 <!--
