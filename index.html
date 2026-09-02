@@ -369,6 +369,7 @@ footer{text-align:center;padding:30px 12px;color:var(--mut);font-size:12.5px;
     </div>
     <div id="kpiS" class="kpi"></div>
     <div id="alertS"></div>
+    <div id="diagSummary"></div>
     <h4>📊 โปรไฟล์ความสามารถหลายมิติ</h4>
     <canvas id="cvAbility" height="380"></canvas>
     <h4>🧠 ความน่าจะเป็นของการรอบรู้จาก G-DINA</h4>
@@ -1606,7 +1607,8 @@ function tab(t){
     document.getElementById('pg-'+x).classList.toggle('hide',x!==t);
     document.getElementById('tb-'+x).classList.toggle('on',x===t);});
   if(t==='s'){var s=curStu();if(s){drawAbilityChart('cvAbility',s);drawMastery('cvMastery',s);
-    drawModelProfile('cvModelProf',+document.getElementById('stuSel').value);}}
+    var si=+document.getElementById('stuSel').value;
+    drawModelProfile('cvModelProf',si);drawDiagProfile('cvDiagProf',si);drawItemMap('cvItemMap',si);}}
   if(t==='g')drawHist('cvHist',S.students.map(function(o){return SS.calc(o.gTheta);}).filter(function(v){return v!==null;}));
   if(t==='d'&&S.gd)drawPrev('cvPrev');
   if(t==='q'&&S.qv){drawPVAF('cvPvaf');if(S.qvHist)drawBIC('cvBic');}
@@ -2492,7 +2494,7 @@ function renderDiag(){
   document.getElementById('alertS').innerHTML=w.length
     ?'<div class="msg m-wn">⚠️ '+w.join('<br>⚠️ ')+'</div>'
     :'<div class="msg m-ok">✅ ค่าประมาณลู่เข้าปกติ Q-Matrix สอดคล้องกับข้อมูล และโมเดลผ่านการตรวจสอบความกลมกลืน</div>';
-  renderAbilityProfile(stu,mg);renderNeuralProfile(i);
+  renderDiagSummary(i);renderAbilityProfile(stu,mg);renderNeuralProfile(i);
   requestAnimationFrame(function(){drawAbilityChart('cvAbility',stu);drawMastery('cvMastery',stu);});}
 
 function renderAbilityProfile(stu,mg){
@@ -2596,6 +2598,312 @@ window.addEventListener('resize',function(){
 /* ==========================================================
    PRINT + EXPORT
 ========================================================== */
+
+/* ==========================================================
+   MODULE : สรุปผลการวินิจฉัยรายบุคคล จุดแข็ง–จุดอ่อน และข้อเสนอแนะ
+   ทุกข้อความสังเคราะห์จากหลักฐานเชิงสถิติที่คำนวณได้จริงเท่านั้น
+   ========================================================== */
+function diagnoseStudent(i){
+  if(!S.students||!S.students[i]||!S.Q)return null;
+  var stu=S.students[i],K=S.attrNames.length,J=S.Q.length,thr=S.threshold;
+  var mg=S.gd?S.gd.marg[i]:null,mapA=S.gd?S.gd.map[i]:null;
+  var nnM=(S.nn&&!S.nn.err&&S.nn.theta)?S.nn.theta.mirt[i]:null;
+  var nnD=(S.nn&&!S.nn.err&&S.nn.theta)?S.nn.theta.deep[i]:null;
+  var oof=(S.cv&&S.cv.oofMarg)?S.cv.oofMarg[i]:null;
+  var attrs=[],k,j;
+  for(k=0;k<K;k++){
+    var items=[],wrong=[],right=[],miss=0,co={};
+    for(j=0;j<J;j++){
+      if(S.Q[j][k]!==1)continue;
+      var x=S.X[i][j],nreq=0,others=[];
+      for(var k2=0;k2<K;k2++)if(S.Q[j][k2]===1){nreq++;if(k2!==k)others.push({k:k2,name:S.attrNames[k2]});}
+      var rec={j:j,name:S.itemNames[j],x:x,nreq:nreq,others:others,
+        p:S.ip[j]?S.ip[j].p:NaN,a:S.ip[j]?S.ip[j].a:NaN,b:S.ip[j]?S.ip[j].b:NaN};
+      items.push(rec);
+      if(x===null)miss++;else if(x===1)right.push(rec);else wrong.push(rec);
+      others.forEach(function(o){co[o.name]=(co[o.name]||0)+1;});}
+    var nAns=right.length+wrong.length;
+    var pGD=(mg&&isFinite(mg[k]))?mg[k]:null,pIRT=stu.pMastery[k];
+    var p=(pGD!==null)?pGD:pIRT,src=(pGD!==null)?'G-DINA':'IRT';
+    var mastered=isFinite(p)?(p>=thr):false;
+    var dist=isFinite(p)?Math.abs(p-thr):NaN;
+    var cert=(!isFinite(p)||nAns<2)?'ต่ำ':((dist>=.25&&nAns>=3)?'สูง':(dist>=.10?'ปานกลาง':'ต่ำ'));
+    var solo=items.filter(function(o){return o.nreq===1;}),
+        joint=items.filter(function(o){return o.nreq>1;});
+    var soloAns=solo.filter(function(o){return o.x!==null;}),
+        jointAns=joint.filter(function(o){return o.x!==null;});
+    attrs.push({k:k,name:S.attrNames[k],items:items,nItems:items.length,nAns:nAns,miss:miss,
+      right:right,wrong:wrong,nRight:right.length,nWrong:wrong.length,
+      pct:nAns?right.length/nAns:NaN,
+      p:p,pGD:pGD,pIRT:pIRT,src:src,mastered:mastered,dist:dist,cert:cert,
+      alpha:mapA?mapA[k]:null,oof:oof?oof[k]:null,
+      theta:stu.theta[k],se:stu.seTheta[k],ss:SS.calc(stu.theta[k]),
+      mirtSS:nnM?SS.calc(nnM.th[k]):null,deepSS:nnD?SS.calc(nnD.mu[k]):null,
+      solo:solo,joint:joint,
+      soloPct:soloAns.length?solo.filter(function(o){return o.x===1;}).length/soloAns.length:NaN,
+      jointPct:jointAns.length?joint.filter(function(o){return o.x===1;}).length/jointAns.length:NaN,
+      nSolo:soloAns.length,nJoint:jointAns.length,co:co});}
+
+  var strengths=attrs.filter(function(a){return a.mastered&&a.cert!=='ต่ำ';}),
+      borderline=attrs.filter(function(a){return a.cert==='ต่ำ';}),
+      weak=attrs.filter(function(a){return !a.mastered&&a.cert!=='ต่ำ';});
+  strengths.sort(function(a,b){return (b.p||0)-(a.p||0);});
+  weak.sort(function(a,b){return (a.p||0)-(b.p||0)||b.nItems-a.nItems;});
+  borderline.sort(function(a,b){return (a.p||0)-(b.p||0);});
+
+  /* ลำดับการซ่อมเสริม : เริ่มจากคุณลักษณะที่ปรากฏในข้อที่ต้องใช้คุณลักษณะเดียว
+     (เป็นฐานของข้ออื่น) ก่อน แล้วจึงไปคุณลักษณะที่ปรากฏเฉพาะในข้อเชิงบูรณาการ */
+  var order=weak.slice().sort(function(a,b){
+    var sa=(a.nSolo>0?0:1),sb=(b.nSolo>0?0:1);
+    if(sa!==sb)return sa-sb;
+    return (a.p||0)-(b.p||0);});
+
+  var cautions=[];
+  if(S.m2&&!S.m2.err&&S.m2.rmsea>.08)
+    cautions.push('RMSEA₂ = '+S.m2.rmsea.toFixed(3)+' สูงกว่าเกณฑ์ .08 โมเดลยังกลมกลืนกับข้อมูลไม่ดีพอ '+
+      'ผลวินิจฉัยรายบุคคลจึงมีความคลาดเคลื่อนเชิงระบบปะปนอยู่');
+  if(S.gd&&S.gd.mapP[i]<.5)
+    cautions.push('ความมั่นใจของโปรไฟล์แฝง MAP เท่ากับ '+(S.gd.mapP[i]*100).toFixed(1)+
+      '% ซึ่งต่ำกว่า 50% แสดงว่ารูปแบบคำตอบของผู้เรียนรายนี้เข้าได้กับหลายโปรไฟล์พอ ๆ กัน');
+  if(S.qv&&S.qv.nFlag)
+    cautions.push('Q-Matrix ยังมี '+S.qv.nFlag+' ข้อที่ผลการตรวจสอบ PVAF ไม่สอดคล้องกับการระบุเดิม '+
+      'การตีความคุณลักษณะที่เกี่ยวข้องกับข้อเหล่านั้นควรทำอย่างระมัดระวัง');
+  if(S.gd&&isFinite(S.gd.accAttr)&&S.gd.accAttr<.85)
+    cautions.push('ความแม่นในการจำแนกรายคุณลักษณะของโมเดลอยู่ที่ '+(S.gd.accAttr*100).toFixed(1)+
+      '% ซึ่งต่ำกว่า 85% ผลรายบุคคลจึงยังไม่ควรใช้ตัดสินใจที่มีผลได้ผลเสียสูง');
+  if(oof&&mapA&&oof.join('')!==mapA.join(''))
+    cautions.push('การจำแนกนอกกลุ่มตัวอย่าง (cross-validation) ให้โปรไฟล์ต่างจากการวิเคราะห์ข้อมูลเต็ม '+
+      'แสดงว่าโปรไฟล์ของผู้เรียนรายนี้ยังไม่มั่นคง');
+  var nSmall=attrs.filter(function(a){return a.nItems<3;});
+  if(nSmall.length)
+    cautions.push('คุณลักษณะ '+nSmall.map(function(a){return '“'+a.name+'”';}).join(' ')+
+      ' วัดด้วยข้อสอบน้อยกว่า 3 ข้อ ความเที่ยงของการจำแนกจึงต่ำโดยธรรมชาติ');
+
+  return{i:i,id:stu.id,K:K,J:J,thr:thr,attrs:attrs,strengths:strengths,weak:weak,
+    borderline:borderline,order:order,cautions:cautions,
+    nMastered:attrs.filter(function(a){return a.mastered;}).length,
+    raw:stu.raw,ss:SS.calc(stu.gTheta),band:SS.band(stu.gTheta),
+    mapP:S.gd?S.gd.mapP[i]:null,mapA:mapA};}
+
+/* ---------- ข้อเสนอแนะเชิงวิชาการ (สังเคราะห์จากหลักฐาน) ---------- */
+function recommendFor(a,D){
+  var r=[],pc=isFinite(a.pct)?(a.pct*100).toFixed(0):'–';
+  var wn=a.wrong.map(function(o){return o.name;}).join(', ');
+
+  if(a.cert==='ต่ำ'){
+    r.push('หลักฐานยังไม่เพียงพอต่อการสรุป: ค่าความน่าจะเป็นของการรอบรู้เท่ากับ '+
+      (isFinite(a.p)?a.p.toFixed(3):'–')+' ห่างจากเกณฑ์ '+D.thr.toFixed(2)+' เพียง '+
+      (isFinite(a.dist)?a.dist.toFixed(3):'–')+' และวัดด้วยข้อสอบเพียง '+a.nItems+' ข้อ '+
+      'ควรเพิ่มข้อสอบที่วัดคุณลักษณะนี้ให้ครบอย่างน้อย 4–5 ข้อ แล้วประเมินซ้ำก่อนตัดสินใจจัดสอนซ่อมเสริม');
+    return r;}
+
+  if(a.mastered){
+    r.push('รอบรู้แล้วด้วยความมั่นใจระดับ'+a.cert+' (P = '+a.p.toFixed(3)+' ตอบถูก '+
+      a.nRight+' จาก '+a.nAns+' ข้อ คิดเป็น '+pc+'%) ควรใช้คุณลักษณะนี้เป็นฐานในการต่อยอด '+
+      'และมอบหมายงานที่ต้องบูรณาการคุณลักษณะนี้เข้ากับคุณลักษณะที่ยังไม่รอบรู้');
+    return r;}
+
+  /* --- ไม่รอบรู้ --- */
+  var lv;
+  if(isFinite(a.pct)&&a.pct<.34)lv='ต้องสอนซ่อมเสริมเต็มรูปแบบ (re-teaching)';
+  else if(isFinite(a.pct)&&a.pct<.67)lv='ต้องฝึกเสริมแบบเจาะจงจุดบกพร่อง (targeted practice)';
+  else lv='ต้องฝึกให้เกิดความคงทนและความคล่องแคล่ว (consolidation)';
+  r.push('ระดับความเร่งด่วน: '+lv+' — ค่าความน่าจะเป็นของการรอบรู้เท่ากับ '+a.p.toFixed(3)+
+    ' ต่ำกว่าเกณฑ์ '+D.thr.toFixed(2)+' อยู่ '+(D.thr-a.p).toFixed(3)+
+    ' และตอบถูกเพียง '+a.nRight+' จาก '+a.nAns+' ข้อ ('+pc+'%)');
+
+  if(a.nWrong)
+    r.push('ใช้ข้อที่ตอบผิดเป็นสื่อวินิจฉัยในการสอนซ่อมเสริม ได้แก่ ข้อ '+wn+
+      ' โดยให้ผู้เรียนอธิบายวิธีคิดของตนเองก่อน แล้วจึงชี้จุดที่คลาดเคลื่อน');
+
+  /* หลักฐานแยกระหว่างข้อเดี่ยวกับข้อบูรณาการ */
+  if(a.nSolo>=2&&a.nJoint>=2&&isFinite(a.soloPct)&&isFinite(a.jointPct)){
+    if(a.soloPct-a.jointPct>=.25)
+      r.push('ข้อที่วัดคุณลักษณะนี้เพียงลำพังตอบถูก '+(a.soloPct*100).toFixed(0)+
+        '% แต่ข้อที่ต้องใช้ร่วมกับคุณลักษณะอื่นตอบถูกเพียง '+(a.jointPct*100).toFixed(0)+
+        '% หลักฐานชี้ว่าปัญหาน่าจะอยู่ที่การบูรณาการหลายคุณลักษณะเข้าด้วยกัน '+
+        'มากกว่าตัวคุณลักษณะนี้โดยลำพัง จึงควรเน้นงานที่ต้องใช้หลายคุณลักษณะพร้อมกันแบบค่อยเป็นค่อยไป');
+    else if(a.jointPct-a.soloPct>=.25)
+      r.push('ข้อที่วัดคุณลักษณะนี้เพียงลำพังตอบถูกเพียง '+(a.soloPct*100).toFixed(0)+
+        '% ขณะที่ข้อบูรณาการตอบถูก '+(a.jointPct*100).toFixed(0)+
+        '% รูปแบบนี้ผิดปกติ ควรตรวจสอบคุณภาพของข้อที่วัดคุณลักษณะนี้โดยลำพัง '+
+        'และตรวจสอบการระบุ Q-Matrix ของข้อดังกล่าวอีกครั้ง');
+    else
+      r.push('ผลการตอบข้อเดี่ยว ('+(a.soloPct*100).toFixed(0)+'%) และข้อบูรณาการ ('+
+        (a.jointPct*100).toFixed(0)+'%) ไม่ต่างกันมากพอจะชี้ว่าปัญหาอยู่ที่การบูรณาการ '+
+        'จึงถือเป็นความบกพร่องที่ตัวคุณลักษณะนี้โดยตรง ควรเริ่มซ่อมเสริมจากมโนทัศน์พื้นฐานของคุณลักษณะนี้ก่อน');}
+
+  /* คุณลักษณะร่วมที่รอบรู้แล้ว ใช้เป็นจุดเกาะเกี่ยว */
+  var supp=[];
+  for(var nm in a.co){
+    var o=D.attrs.filter(function(z){return z.name===nm;})[0];
+    if(o&&o.mastered)supp.push(nm);}
+  if(supp.length)
+    r.push('คุณลักษณะที่ปรากฏร่วมกันในข้อเดียวกันและผู้เรียนรอบรู้แล้ว ได้แก่ '+
+      supp.map(function(n){return '“'+n+'”';}).join(' ')+
+      ' สามารถใช้เป็นจุดเกาะเกี่ยวในการสอน โดยเชื่อมโยงจากสิ่งที่ทำได้แล้วไปสู่สิ่งที่ยังทำไม่ได้');
+
+  /* หลักฐานยืนยันข้ามโมเดล */
+  if(a.mirtSS!==null&&a.deepSS!==null){
+    var lowM=a.mirtSS<45,lowD=a.deepSS<45;
+    if(lowM&&lowD)
+      r.push('ผลจาก MIRT (SS = '+a.mirtSS.toFixed(1)+') และ Deep-IRT (SS = '+a.deepSS.toFixed(1)+
+        ') ต่ำสอดคล้องกัน เป็นหลักฐานยืนยันข้ามโมเดลว่าจุดอ่อนนี้เป็นของจริง ไม่ใช่ผลจากการเลือกโมเดล');
+    else if(lowM!==lowD)
+      r.push('ผลจาก MIRT (SS = '+a.mirtSS.toFixed(1)+') และ Deep-IRT (SS = '+a.deepSS.toFixed(1)+
+        ') ไม่สอดคล้องกัน ควรเก็บหลักฐานเพิ่มเติมก่อนสรุปว่าคุณลักษณะนี้เป็นจุดอ่อนที่แท้จริง');}
+
+  if(a.oof!==null&&isFinite(a.oof)&&(a.oof>=D.thr)!==a.mastered)
+    r.push('การจำแนกนอกกลุ่มตัวอย่างให้ผลต่างจากการวิเคราะห์ข้อมูลเต็ม (P นอกกลุ่ม = '+
+      a.oof.toFixed(3)+') ผลของคุณลักษณะนี้จึงยังไม่มั่นคง ควรประเมินซ้ำ');
+
+  r.push('การประเมินความก้าวหน้า: หลังสอนซ่อมเสริม ควรวัดซ้ำด้วยข้อสอบที่วัดคุณลักษณะนี้ชุดใหม่ '+
+    'ที่มีระดับความยากใกล้เคียงกัน แล้วถือว่าผ่านเมื่อค่าความน่าจะเป็นของการรอบรู้ ≥ '+D.thr.toFixed(2));
+  return r;}
+
+/* ---------- กราฟที่ 1 : ความรอบรู้รายคุณลักษณะ ---------- */
+function drawDiagProfile(id,i){
+  var cv=document.getElementById(id);if(!cv)return;
+  var D=diagnoseStudent(i);if(!D)return;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,
+      K=D.attrs.length,rowH=34,H=Math.max(150,54+K*rowH);
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var lw=Math.min(190,Math.max(110,W*.22)),pL=lw+10,pR=118,pT=30,iw=W-pL-pR;
+  x.font='11px Sarabun,sans-serif';x.textAlign='center';
+  for(var t=0;t<=5;t++){
+    var xx=pL+iw*t/5;x.strokeStyle='#e6e8ef';x.lineWidth=1;
+    x.beginPath();x.moveTo(xx,pT-6);x.lineTo(xx,pT+K*rowH-6);x.stroke();
+    x.fillStyle='#6b7280';x.fillText((t/5).toFixed(1),xx,pT-12);}
+  var tx=pL+iw*D.thr;
+  x.strokeStyle='#e11d48';x.lineWidth=2;x.setLineDash([6,4]);
+  x.beginPath();x.moveTo(tx,pT-6);x.lineTo(tx,pT+K*rowH-6);x.stroke();x.setLineDash([]);
+  x.fillStyle='#e11d48';x.font='bold 10.5px Sarabun,sans-serif';
+  x.fillText('เกณฑ์ '+D.thr.toFixed(2),tx,H-8);
+  D.attrs.forEach(function(a,k){
+    var y=pT+k*rowH,bh=15,col=a.mastered?'#0f9d58':'#e11d48';
+    if(a.cert==='ต่ำ')col='#c2740a';
+    x.fillStyle='#f2f3f8';x.fillRect(pL,y,iw,bh);
+    if(isFinite(a.p)){x.fillStyle=col;x.globalAlpha=.9;x.fillRect(pL,y,iw*clamp(a.p,0,1),bh);x.globalAlpha=1;}
+    if(isFinite(a.pct)){
+      var mx=pL+iw*a.pct;
+      x.strokeStyle='#111827';x.lineWidth=2;
+      x.beginPath();x.moveTo(mx,y-3);x.lineTo(mx,y+bh+3);x.stroke();}
+    x.fillStyle='#111827';x.font='bold 11.5px Sarabun,sans-serif';x.textAlign='right';
+    var nm=a.name.length>22?a.name.slice(0,21)+'…':a.name;
+    x.fillText(nm,pL-12,y+12);
+    x.textAlign='left';x.font='bold 11px Sarabun,sans-serif';x.fillStyle=col;
+    x.fillText((isFinite(a.p)?a.p.toFixed(3):'–')+'  '+(a.mastered?'รอบรู้':(a.cert==='ต่ำ'?'ก้ำกึ่ง':'ยังไม่รอบรู้')),
+      pL+iw+8,y+12);});
+  x.textAlign='left';x.font='10.5px Sarabun,sans-serif';x.fillStyle='#6b7280';
+  x.fillText('แถบสี = P(mastery) · ขีดดำ = สัดส่วนตอบถูกจริงของข้อที่วัดคุณลักษณะนั้น',pL-lw+2,H-8);}
+
+/* ---------- กราฟที่ 2 : ผังหลักฐานการตอบรายข้อ ---------- */
+function drawItemMap(id,i){
+  var cv=document.getElementById(id);if(!cv)return;
+  var D=diagnoseStudent(i);if(!D)return;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,
+      K=D.K,J=D.J,rowH=26,H=Math.max(130,58+K*rowH);
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var lw=Math.min(190,Math.max(110,W*.22)),pL=lw+10,pR=14,pT=32,iw=W-pL-pR;
+  var cw=iw/J,bw=Math.max(4,Math.min(cw-2,22));
+  x.font='9.5px Sarabun,sans-serif';x.textAlign='center';x.fillStyle='#6b7280';
+  for(var j=0;j<J;j++){
+    if(J<=30||j%2===0)x.fillText(S.itemNames[j].replace(/^I/,''),pL+cw*(j+.5),pT-10);}
+  for(var k=0;k<K;k++){
+    var y=pT+k*rowH;
+    x.fillStyle='#111827';x.font='bold 11.5px Sarabun,sans-serif';x.textAlign='right';
+    var nm=S.attrNames[k].length>22?S.attrNames[k].slice(0,21)+'…':S.attrNames[k];
+    x.fillText(nm,pL-12,y+14);
+    for(var j2=0;j2<J;j2++){
+      var bx=pL+cw*j2+(cw-bw)/2,by=y+3;
+      if(S.Q[j2][k]!==1){x.fillStyle='#f4f5f9';x.fillRect(bx,by+6,bw,3);continue;}
+      var v=S.X[i][j2];
+      x.fillStyle=(v===null)?'#cbd0dd':(v===1?'#0f9d58':'#e11d48');
+      x.globalAlpha=.92;x.fillRect(bx,by,bw,15);x.globalAlpha=1;}}
+  x.textAlign='left';x.font='10.5px Sarabun,sans-serif';
+  var lx=pL;
+  [['#0f9d58','ตอบถูก'],['#e11d48','ตอบผิด'],['#cbd0dd','ไม่มีข้อมูล'],['#f4f5f9','ไม่ได้วัดคุณลักษณะนี้']]
+    .forEach(function(o){
+      x.fillStyle=o[0];x.fillRect(lx,H-20,11,11);
+      x.fillStyle='#6b7280';x.fillText(o[1],lx+15,H-11);
+      lx+=x.measureText(o[1]).width+40;});}
+
+/* ---------- RENDER : สรุปผลการวินิจฉัยรายบุคคล ---------- */
+function renderDiagSummary(i){
+  var host=document.getElementById('diagSummary');if(!host)return;
+  var D=diagnoseStudent(i);
+  if(!D){host.innerHTML='';return;}
+  function chips(list,cls,empty){
+    return list.length
+      ?list.map(function(a){return '<span class="tag '+cls+'" style="margin:2px 4px 2px 0">'+
+        a.name+' · '+(isFinite(a.p)?a.p.toFixed(2):'–')+'</span>';}).join('')
+      :'<span class="se">'+empty+'</span>';}
+
+  var h='<h4>🩺 กราฟผลการวินิจฉัยรายคุณลักษณะ · Attribute-level Diagnostic Profile</h4>'+
+    '<canvas id="cvDiagProf" height="220"></canvas>'+
+    '<h4>🧾 ผังหลักฐานการตอบรายข้อจำแนกตามคุณลักษณะ · Item-level Evidence Map</h4>'+
+    '<canvas id="cvItemMap" height="200"></canvas>';
+
+  h+='<h4>📋 สรุปผลการวินิจฉัยรายบุคคล · Diagnostic Summary</h4>'+
+    '<div class="g2">'+
+    '<div class="msg m-ok" style="margin:0"><b>จุดแข็ง / Strengths ('+D.strengths.length+')</b><br>'+
+      chips(D.strengths,'t-ok','ยังไม่พบคุณลักษณะที่รอบรู้อย่างมั่นใจ')+'</div>'+
+    '<div class="msg m-er" style="margin:0"><b>จุดอ่อน / Weaknesses ('+D.weak.length+')</b><br>'+
+      chips(D.weak,'t-er','ไม่พบคุณลักษณะที่ไม่รอบรู้อย่างชัดเจน')+'</div></div>'+
+    (D.borderline.length?'<div class="msg m-wn" style="margin-top:10px"><b>ก้ำกึ่ง — หลักฐานยังไม่พอสรุป / Inconclusive ('+
+      D.borderline.length+')</b><br>'+chips(D.borderline,'t-wn','')+
+      '<div style="font-size:12px;margin-top:5px">คุณลักษณะกลุ่มนี้มีค่าความน่าจะเป็นใกล้เกณฑ์มาก '+
+      'หรือวัดด้วยข้อสอบน้อยเกินไป จึงยังไม่ควรสรุปว่ารอบรู้หรือไม่รอบรู้</div></div>':'');
+
+  h+='<h4>📑 ตารางหลักฐานรายคุณลักษณะ · Evidence Table</h4><div class="scroll"><table><thead><tr>'+
+    '<th style="text-align:left">คุณลักษณะ</th><th>ข้อที่วัด</th><th>ตอบถูก</th><th>% ถูก</th>'+
+    '<th>P(mastery)</th><th>แหล่งค่า</th><th>ความมั่นใจ</th><th>ข้อเดี่ยว</th><th>ข้อบูรณาการ</th>'+
+    '<th>ข้อที่ตอบผิด</th><th>สรุป</th></tr></thead><tbody>';
+  D.attrs.forEach(function(a){
+    var col=a.mastered?'var(--ok)':(a.cert==='ต่ำ'?'var(--wn)':'var(--er)');
+    var lab=a.mastered?'รอบรู้':(a.cert==='ต่ำ'?'ก้ำกึ่ง':'ยังไม่รอบรู้');
+    var tg=a.mastered?'t-ok':(a.cert==='ต่ำ'?'t-wn':'t-er');
+    h+='<tr><td style="text-align:left;font-weight:700">'+a.name+'</td>'+
+      '<td>'+a.nItems+'</td><td>'+a.nRight+' / '+a.nAns+'</td>'+
+      '<td>'+(isFinite(a.pct)?(a.pct*100).toFixed(0)+'%':'–')+'</td>'+
+      '<td style="font-weight:800;color:'+col+'">'+(isFinite(a.p)?a.p.toFixed(3):'–')+'</td>'+
+      '<td class="se">'+a.src+'</td><td class="se">'+a.cert+'</td>'+
+      '<td>'+(a.nSolo?(a.soloPct*100).toFixed(0)+'%':'–')+'</td>'+
+      '<td>'+(a.nJoint?(a.jointPct*100).toFixed(0)+'%':'–')+'</td>'+
+      '<td style="font-size:11px;text-align:left">'+
+        (a.wrong.length?a.wrong.map(function(o){return o.name;}).join(', '):'<span class="se">ไม่มี</span>')+'</td>'+
+      '<td><span class="tag '+tg+'">'+lab+'</span></td></tr>';});
+  h+='</tbody></table></div>';
+
+  h+='<h4>🎯 ข้อเสนอแนะเชิงวิชาการในการแก้ไขจุดอ่อน · Evidence-based Recommendations</h4>';
+  if(!D.order.length&&!D.borderline.length){
+    h+='<div class="msg m-ok">ผู้เรียนรายนี้ผ่านเกณฑ์ความรอบรู้ครบทุกคุณลักษณะด้วยความมั่นใจที่ยอมรับได้ '+
+      'ควรมอบหมายงานที่ท้าทายขึ้นและใช้คุณลักษณะหลายด้านร่วมกัน</div>';}
+  else{
+    h+='<div class="note" style="margin-bottom:12px"><b>ลำดับการซ่อมเสริมที่เสนอ:</b> '+
+      'เรียงจากคุณลักษณะที่มีข้อสอบวัดโดยลำพัง (ซึ่งเป็นฐานของข้อเชิงบูรณาการ) ก่อน '+
+      'แล้วจึงเรียงตามค่าความน่าจะเป็นของการรอบรู้จากต่ำไปสูง</div>';
+    var seq=D.order.concat(D.borderline);
+    seq.forEach(function(a,n){
+      var col=a.cert==='ต่ำ'?'var(--wn)':'var(--er)';
+      h+='<div class="card" style="padding:15px 17px;margin-bottom:10px;border-left:4px solid '+col+'">'+
+        '<b style="color:var(--ink);font-size:14.5px">ลำดับที่ '+(n+1)+' · '+a.name+'</b>'+
+        '<span class="tag '+(a.cert==='ต่ำ'?'t-wn':'t-er')+'" style="margin-left:8px">'+
+        (a.cert==='ต่ำ'?'ก้ำกึ่ง':'จุดอ่อน')+'</span>'+
+        '<ul style="margin:9px 0 0;padding-left:20px;font-size:13px">'+
+        recommendFor(a,D).map(function(t){return '<li style="margin-bottom:5px">'+t+'</li>';}).join('')+
+        '</ul></div>';});}
+
+  if(D.cautions.length)
+    h+='<div class="msg m-wn" style="margin-top:12px"><b>ข้อควรระวังเชิงวิธีวิทยา</b><br>· '+
+      D.cautions.join('<br>· ')+'</div>';
+  h+='<div class="note"><b>ที่มาของข้อเสนอแนะ:</b> ข้อความทั้งหมดสังเคราะห์จากค่าที่คำนวณได้จริงในการวิเคราะห์ครั้งนี้ '+
+    'ได้แก่ ความน่าจะเป็นของการรอบรู้ สัดส่วนการตอบถูก โครงสร้าง Q-Matrix และผลการตรวจสอบความกลมกลืนของโมเดล '+
+    'ระบบไม่ได้สร้างเนื้อหาสาระเฉพาะวิชาขึ้นเอง ผู้สอนจึงต้องเติมสาระและกิจกรรมที่สอดคล้องกับหลักสูตรด้วยตนเอง</div>';
+  host.innerHTML=h;
+  requestAnimationFrame(function(){drawDiagProfile('cvDiagProf',i);drawItemMap('cvItemMap',i);});}
 
 /* ---------- มิติความสามารถจาก MIRT และ Deep-IRT (รายบุคคล) ---------- */
 function nnAbilityRows(i){
@@ -2711,7 +3019,113 @@ function printReport(){
    '.mono{font-family:monospace;letter-spacing:2px;font-size:13px;font-weight:800}'+
    '.sig{margin-top:40px;text-align:right;font-size:12px}'+
    'footer{margin-top:24px;border-top:1px solid #cbd5e1;padding-top:8px;text-align:center;font-size:10.5px;color:#64748b}'+
-   '@media print{.rpt{page-break-inside:avoid}}';
+   '.fig{margin:10px 0 14px;text-align:center}.fig img{max-width:100%;border:1px solid #cbd5e1;border-radius:6px}'+
+   '.cap{font-size:10.5px;color:#475569;margin-top:4px}'+
+   '.recs{margin:0;padding-left:18px;font-size:11.5px}.recs li{margin-bottom:4px}'+
+   '.rec{border-left:3px solid #7c3aed;padding:7px 10px;margin:8px 0;background:#faf8ff;page-break-inside:avoid}'+
+   '.rec b{font-size:12.5px}.pill{display:inline-block;padding:1px 7px;border-radius:10px;'+
+   'font-size:10px;font-weight:800;margin-left:5px}'+
+   '.p-ok{background:#d1fae5;color:#065f46}.p-er{background:#ffe4e6;color:#9f1239}'+
+   '.p-wn{background:#fef3c7;color:#92400e}'+
+   'h3{border-bottom:1px solid #ddd6fe;padding-bottom:3px}'+
+   '@media print{.rpt,.rec,.fig{page-break-inside:avoid}}';
+  var DG=diagnoseStudent(i),dgBlock='',apxBlock='';
+  if(DG){
+    var fig=function(cid,cap){
+      try{var c=document.getElementById(cid);
+        if(c&&c.toDataURL)return '<div class="fig"><img src="'+c.toDataURL('image/png')+'">'+
+          '<div class="cap">'+cap+'</div></div>';}catch(e){}
+      return '';};
+    var evRows='';
+    DG.attrs.forEach(function(a){
+      var lab=a.mastered?'รอบรู้':(a.cert==='ต่ำ'?'ก้ำกึ่ง':'ยังไม่รอบรู้');
+      evRows+='<tr><td class="l">'+a.name+'</td><td>'+a.nItems+'</td>'+
+        '<td>'+a.nRight+' / '+a.nAns+'</td>'+
+        '<td>'+(isFinite(a.pct)?(a.pct*100).toFixed(0)+'%':'–')+'</td>'+
+        '<td class="ss">'+(isFinite(a.p)?a.p.toFixed(3):'–')+'</td>'+
+        '<td>'+a.src+'</td><td>'+a.cert+'</td>'+
+        '<td>'+(a.nSolo?(a.soloPct*100).toFixed(0)+'%':'–')+'</td>'+
+        '<td>'+(a.nJoint?(a.jointPct*100).toFixed(0)+'%':'–')+'</td>'+
+        '<td class="l" style="font-size:10.5px">'+
+          (a.wrong.length?a.wrong.map(function(o){return o.name;}).join(', '):'ไม่มี')+'</td>'+
+        '<td>'+lab+'</td></tr>';});
+    var nameList=function(L){return L.length?L.map(function(a){return a.name+' ('+
+      (isFinite(a.p)?a.p.toFixed(2):'–')+')';}).join(' · '):'ไม่พบ';};
+    var seq=DG.order.concat(DG.borderline),recHtml='';
+    seq.forEach(function(a,n){
+      recHtml+='<div class="rec"><b>ลำดับที่ '+(n+1)+' · '+a.name+'</b>'+
+        '<span class="pill '+(a.cert==='ต่ำ'?'p-wn':'p-er')+'">'+
+        (a.cert==='ต่ำ'?'ก้ำกึ่ง':'จุดอ่อน')+'</span><ul class="recs">'+
+        recommendFor(a,DG).map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul></div>';});
+    if(!seq.length)recHtml='<p style="font-size:12px">ผู้เข้ารับการประเมินผ่านเกณฑ์ความรอบรู้ครบทุกคุณลักษณะ '+
+      'ด้วยความมั่นใจที่ยอมรับได้ ควรมอบหมายงานที่ท้าทายขึ้นและใช้คุณลักษณะหลายด้านร่วมกัน</p>';
+    dgBlock='<h3>ตารางที่ 4 หลักฐานการตอบรายข้อจำแนกตามคุณลักษณะ</h3>'+
+      '<table class="rpt"><thead><tr><th>คุณลักษณะ</th><th>ข้อที่วัด</th><th>ตอบถูก</th><th>% ถูก</th>'+
+      '<th>P(mastery)</th><th>แหล่งค่า</th><th>ความมั่นใจ</th><th>ข้อเดี่ยว</th><th>ข้อบูรณาการ</th>'+
+      '<th>ข้อที่ตอบผิด</th><th>สรุป</th></tr></thead><tbody>'+evRows+'</tbody></table>'+
+      '<p class="note">“ข้อเดี่ยว” คือข้อที่ Q-Matrix ระบุว่าวัดคุณลักษณะนั้นเพียงลำพัง '+
+      '“ข้อบูรณาการ” คือข้อที่ต้องใช้คุณลักษณะนั้นร่วมกับคุณลักษณะอื่น '+
+      'การเปรียบเทียบสองค่านี้ช่วยแยกว่าความบกพร่องอยู่ที่ตัวคุณลักษณะเอง หรืออยู่ที่การบูรณาการหลายคุณลักษณะ</p>'+
+      fig('cvDiagProf','ภาพที่ 1 ผลการวินิจฉัยรายคุณลักษณะ (แถบสี = ความน่าจะเป็นของการรอบรู้ · ขีดดำ = สัดส่วนตอบถูกจริง · เส้นประ = เกณฑ์ '+DG.thr.toFixed(2)+')')+
+      fig('cvItemMap','ภาพที่ 2 ผังหลักฐานการตอบรายข้อจำแนกตามคุณลักษณะ (เขียว = ตอบถูก · แดง = ตอบผิด)')+
+      '<h3>ตารางที่ 5 สรุปผลการวินิจฉัยรายบุคคล</h3>'+
+      '<table class="rpt"><tr><td class="l" style="width:22%">จุดแข็ง (Strengths)</td>'+
+      '<td class="l">'+nameList(DG.strengths)+'</td></tr>'+
+      '<tr><td class="l">จุดอ่อน (Weaknesses)</td><td class="l">'+nameList(DG.weak)+'</td></tr>'+
+      '<tr><td class="l">ก้ำกึ่ง — หลักฐานยังไม่พอสรุป</td><td class="l">'+nameList(DG.borderline)+'</td></tr>'+
+      '<tr><td class="l">ภาพรวมความรอบรู้</td><td class="l">รอบรู้ '+DG.nMastered+' จาก '+DG.K+
+      ' คุณลักษณะ · คะแนนดิบ '+DG.raw+' จาก '+S.X[0].length+' ข้อ · Scale Score รวม '+
+      SS.fmt(S.students[i].gTheta)+' ('+DG.band.label+')</td></tr></table>'+
+      '<p class="note">เกณฑ์การจัดกลุ่ม: “จุดแข็ง” คือคุณลักษณะที่ P(mastery) ≥ '+DG.thr.toFixed(2)+
+      ' และหลักฐานมั่นใจระดับปานกลางขึ้นไป · “จุดอ่อน” คือ P(mastery) ต่ำกว่าเกณฑ์และหลักฐานมั่นใจระดับปานกลางขึ้นไป · '+
+      '“ก้ำกึ่ง” คือค่าที่ห่างจากเกณฑ์น้อยกว่า .10 หรือมีข้อสอบวัดน้อยกว่า 2 ข้อที่ตอบ</p>'+
+      '<h3>ข้อเสนอแนะเชิงวิชาการในการแก้ไขจุดอ่อน</h3>'+recHtml+
+      (DG.cautions.length?'<h3>ข้อควรระวังเชิงวิธีวิทยา</h3><ul class="recs">'+
+        DG.cautions.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul>':'');
+
+    var apx='';
+    for(var aj=0;aj<S.Q.length;aj++){
+      var at=[];
+      for(var ak=0;ak<S.attrNames.length;ak++)if(S.Q[aj][ak]===1)at.push(S.attrNames[ak]);
+      var xv=S.X[i][aj],ipo=S.ip[aj];
+      apx+='<tr><td class="l">'+S.itemNames[aj]+'</td>'+
+        '<td>'+(xv===null?'ไม่มีข้อมูล':(xv===1?'ถูก':'ผิด'))+'</td>'+
+        '<td class="l" style="font-size:10.5px">'+(at.length?at.join(', ')+' ('+at.length+')':'ไม่ระบุ')+'</td>'+
+        '<td>'+(ipo&&isFinite(ipo.p)?ipo.p.toFixed(3):'–')+'</td>'+
+        '<td>'+(ipo&&isFinite(ipo.a)?ipo.a.toFixed(3):'–')+'</td>'+
+        '<td>'+(ipo&&isFinite(ipo.b)?ipo.b.toFixed(3):'–')+'</td>'+
+        '<td>'+(S.gd&&S.gd.items[aj]?S.gd.items[aj].link:'–')+'</td></tr>';}
+    apxBlock='<h3>ภาคผนวก ก การตอบรายข้อและพารามิเตอร์ข้อสอบ</h3>'+
+      '<table class="rpt"><thead><tr><th>ข้อ</th><th>ผลการตอบ</th><th>คุณลักษณะที่วัด</th>'+
+      '<th>p</th><th>a</th><th>b</th><th>โมเดลรายข้อ</th></tr></thead><tbody>'+apx+'</tbody></table>'+
+      '<h3>ภาคผนวก ข วิธีวิเคราะห์และคุณภาพของโมเดล</h3><table class="rpt">'+
+      '<tr><td class="l">การประมาณค่าพารามิเตอร์ข้อสอบ</td><td class="l">'+
+      (S.cal==='EM'?'MML ผ่าน EM แบบ Bock–Aitkin (quadrature 41 จุด, prior N(0,1))':'สูตรแปลงจากสถิติคลาสสิก')+
+      '</td></tr>'+
+      (S.gd?'<tr><td class="l">โมเดลวินิจฉัย</td><td class="l">'+
+        (S.gd.link==='MIXED'?'G-DINA ผสมรายข้อ':S.gd.link)+' · โครงสร้าง '+
+        (S.gd.struc==='HO'?'Higher-Order':'Saturated')+' · คลาสแฝง '+S.gd.C+' คลาส · พารามิเตอร์ '+
+        S.gd.npar+' · AIC = '+S.gd.aic.toFixed(1)+' · BIC = '+S.gd.bic.toFixed(1)+'</td></tr>'+
+        '<tr><td class="l">ความแม่นในการจำแนก (in-sample)</td><td class="l">รายคุณลักษณะ '+
+        (S.gd.accAttr*100).toFixed(2)+'% · รายโปรไฟล์ '+(S.gd.accPattern*100).toFixed(2)+'%</td></tr>':'')+
+      (S.af?'<tr><td class="l">ความกลมกลืนสัมบูรณ์</td><td class="l">SRMSR = '+S.af.srmsr.toFixed(4)+
+        ' · MADcor = '+S.af.madcor.toFixed(4)+' · max χ² = '+S.af.maxChi.toFixed(2)+'</td></tr>':'')+
+      (S.m2&&!S.m2.err?'<tr><td class="l">ความกลมกลืนแบบสารสนเทศจำกัด</td><td class="l">M₂('+S.m2.df+') = '+
+        S.m2.M2.toFixed(2)+' · p = '+(S.m2.p<.0001?'&lt;.0001':S.m2.p.toFixed(4))+
+        ' · RMSEA₂ = '+S.m2.rmsea.toFixed(4)+' [90% CI '+S.m2.lo.toFixed(4)+', '+S.m2.hi.toFixed(4)+']</td></tr>':'')+
+      (S.qv?'<tr><td class="l">การตรวจสอบ Q-Matrix</td><td class="l">ตรวจด้วย PVAF ที่ ε = '+
+        S.qv.eps.toFixed(2)+' · พบข้อที่ควรทบทวน '+S.qv.nFlag+' ข้อ จาก '+S.Q.length+' ข้อ</td></tr>':'')+
+      (S.nn&&!S.nn.err?'<tr><td class="l">การเทียบโมเดลนอกกลุ่มตัวอย่าง</td><td class="l">'+
+        'ปิดบังเซลล์ '+(S.nn.frac*100).toFixed(0)+'% ('+S.nn.held+' เซลล์) · '+
+        S.nn.models.map(function(o){return o.key+' AUC = '+(isFinite(o.ev.auc)?o.ev.auc.toFixed(3):'–');}).join(' · ')+
+        '</td></tr>':'')+
+      '<tr><td class="l">เกณฑ์ความรอบรู้ที่ใช้</td><td class="l">P(mastery) ≥ '+S.threshold.toFixed(2)+
+      ' · Scale Score = 50 + 10θ ปรับช่วง 20–80</td></tr>'+
+      '<tr><td class="l">เอกสารอ้างอิงของวิธีการ</td><td class="l" style="font-size:10.5px">'+
+      'de la Torre &amp; Chiu (2016) การตรวจสอบ Q-Matrix ด้วย PVAF · '+
+      'Maydeu-Olivares &amp; Joe (2005, 2006) และ Liu, Tian &amp; Xin (2016) สถิติ M₂ และ RMSEA₂ · '+
+      'Cui, Gierl &amp; Chang (2012) ดัชนีความแม่นและความคงเส้นคงวาของการจำแนก · '+
+      'Reckase (2009) นิยาม MDISC และ MDIFF</td></tr></table>';}
   var nnR=nnAbilityRows(i),nnBlock='';
   if(nnR){
     var nr='';
@@ -2777,10 +3191,7 @@ function printReport(){
    (S.m2&&!S.m2.err&&S.m2.rmsea>.08?'<b>คำเตือน:</b> RMSEA₂ = '+S.m2.rmsea.toFixed(3)+
      ' สูงกว่าเกณฑ์ .08 โมเดลยังกลมกลืนกับข้อมูลไม่ดีพอ ควรตีความผลด้วยความระมัดระวัง'
     :'โมเดลผ่านการตรวจสอบความกลมกลืนในระดับที่ยอมรับได้')+'</p>'+
-   '<h3>ข้อเสนอแนะเชิงการสอน</h3><p style="font-size:12px">'+
-   (weak.length?'ควรจัดกิจกรรมซ่อมเสริมโดยเรียงลำดับความเร่งด่วนจาก Scale Score ต่ำที่สุดก่อน ได้แก่ <b>'+
-     weak.map(function(o){return o.n;}).join(' → ')+'</b>'
-    :'ผู้เข้ารับการประเมินผ่านเกณฑ์ความรอบรู้ครบทุกมิติ')+'</p>'+
+   dgBlock+apxBlock+
    '<div class="sig">ลงชื่อ ..............................................<br>(ผู้รับผิดชอบการประเมิน)<br>วันที่ '+
    new Date().toLocaleDateString('th-TH')+'</div>'+
    '<footer>© 2026 | Developed by ดร.ชัยมงคล ปินะสา คณะครุศาสตร์ มหาวิทยาลัยราชภัฏเลย | All rights reserved.</footer>'+
@@ -3535,6 +3946,20 @@ window.addEventListener('error',function(ev){
       '<br>แนะนำให้ลดจำนวนมิติ จำนวนรอบ Bootstrap หรือจำนวน fold แล้วเริ่มวิเคราะห์ใหม่','er');
   }catch(e){}});
 cvModeUI();initDrop();
+</script>
+      <script language=JavaScript>
+<!--
+var message="Do not click right..!! (อย่าคลิ๊กขวา..!!)";
+///////////////////////////////////
+function clickIE() {if (document.all) {alert(message);return false;}}
+function clickNS(e) {if 
+(document.layers||(document.getElementById&&!document.all)) {
+if (e.which==2||e.which==3) {alert(message);return false;}}}
+if (document.layers) 
+{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
+else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
+document.oncontextmenu=new Function("return false")
+// --> 
 </script>
 </body>
 </html>
