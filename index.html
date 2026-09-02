@@ -374,6 +374,7 @@ footer{text-align:center;padding:30px 12px;color:var(--mut);font-size:12.5px;
     <h4>🧠 ความน่าจะเป็นของการรอบรู้จาก G-DINA</h4>
     <canvas id="cvMastery" height="250"></canvas>
     <div class="scroll"><div id="abilityProfile"></div></div>
+    <div id="nnProfile"></div>
   </div>
 </div>
 
@@ -1604,7 +1605,8 @@ function tab(t){
   ['g','i','d','q','w','f','m','c','n','s'].forEach(function(x){
     document.getElementById('pg-'+x).classList.toggle('hide',x!==t);
     document.getElementById('tb-'+x).classList.toggle('on',x===t);});
-  if(t==='s'){var s=curStu();if(s){drawAbilityChart('cvAbility',s);drawMastery('cvMastery',s);}}
+  if(t==='s'){var s=curStu();if(s){drawAbilityChart('cvAbility',s);drawMastery('cvMastery',s);
+    drawModelProfile('cvModelProf',+document.getElementById('stuSel').value);}}
   if(t==='g')drawHist('cvHist',S.students.map(function(o){return SS.calc(o.gTheta);}).filter(function(v){return v!==null;}));
   if(t==='d'&&S.gd)drawPrev('cvPrev');
   if(t==='q'&&S.qv){drawPVAF('cvPvaf');if(S.qvHist)drawBIC('cvBic');}
@@ -2490,7 +2492,7 @@ function renderDiag(){
   document.getElementById('alertS').innerHTML=w.length
     ?'<div class="msg m-wn">⚠️ '+w.join('<br>⚠️ ')+'</div>'
     :'<div class="msg m-ok">✅ ค่าประมาณลู่เข้าปกติ Q-Matrix สอดคล้องกับข้อมูล และโมเดลผ่านการตรวจสอบความกลมกลืน</div>';
-  renderAbilityProfile(stu,mg);
+  renderAbilityProfile(stu,mg);renderNeuralProfile(i);
   requestAnimationFrame(function(){drawAbilityChart('cvAbility',stu);drawMastery('cvMastery',stu);});}
 
 function renderAbilityProfile(stu,mg){
@@ -2594,6 +2596,93 @@ window.addEventListener('resize',function(){
 /* ==========================================================
    PRINT + EXPORT
 ========================================================== */
+
+/* ---------- มิติความสามารถจาก MIRT และ Deep-IRT (รายบุคคล) ---------- */
+function nnAbilityRows(i){
+  if(!S.nn||S.nn.err||!S.nn.theta)return null;
+  var M=S.nn.theta.mirt[i],D=S.nn.theta.deep[i];
+  if(!M||!D)return null;
+  return S.attrNames.map(function(nm,k){
+    var tm=M.th[k],sm=M.se[k],td=D.mu[k],sd2=D.sd[k];
+    return{k:k,name:nm,tm:tm,sm:sm,ssm:SS.calc(tm),cim:SS.ci(tm,sm),bm:SS.band(tm),
+      td:td,sd:sd2,ssd:SS.calc(td),bd:SS.band(td)};});}
+
+function renderNeuralProfile(i){
+  var host=document.getElementById('nnProfile');if(!host)return;
+  var rows=nnAbilityRows(i);
+  if(!rows){host.innerHTML='';return;}
+  var h='<h4>🧬 มิติความสามารถจากโมเดลหลายมิติ · Multidimensional Ability (MIRT &amp; Deep-IRT)</h4>'+
+    '<canvas id="cvModelProf" height="300"></canvas>'+
+    '<div class="scroll" style="margin-top:10px"><table><thead><tr>'+
+    '<th style="text-align:left">มิติความสามารถ</th>'+
+    '<th>θ · MIRT</th><th>SE</th><th>SS · MIRT</th><th>95% CI</th><th>ระดับ</th>'+
+    '<th>θ · Deep-IRT</th><th>SD</th><th>SS · Deep-IRT</th><th>ระดับ</th>'+
+    '<th>ผลต่าง SS</th></tr></thead><tbody>';
+  rows.forEach(function(o){
+    var df=(o.ssm!==null&&o.ssd!==null)?(o.ssd-o.ssm):null;
+    h+='<tr><td style="text-align:left;font-weight:700">'+o.name+'</td>'+
+      '<td>'+(isFinite(o.tm)?o.tm.toFixed(3):'–')+'</td>'+
+      '<td class="se">'+(isFinite(o.sm)?o.sm.toFixed(3):'–')+'</td>'+
+      '<td style="font-weight:800;font-size:15px;color:'+o.bm.color+'">'+SS.fmt(o.tm)+'</td>'+
+      '<td class="se">'+(o.cim?o.cim[0].toFixed(1)+' – '+o.cim[1].toFixed(1):'–')+'</td>'+
+      '<td><span class="tag" style="background:'+o.bm.color+'22;color:'+o.bm.color+'">'+o.bm.label+'</span></td>'+
+      '<td>'+(isFinite(o.td)?o.td.toFixed(3):'–')+'</td>'+
+      '<td class="se">'+(isFinite(o.sd)?o.sd.toFixed(3):'–')+'</td>'+
+      '<td style="font-weight:800;font-size:15px;color:'+o.bd.color+'">'+SS.fmt(o.td)+'</td>'+
+      '<td><span class="tag" style="background:'+o.bd.color+'22;color:'+o.bd.color+'">'+o.bd.label+'</span></td>'+
+      '<td style="font-weight:700;color:'+(df===null?'var(--mut)':(Math.abs(df)<=5?'var(--ok)':'var(--wn)'))+'">'+
+      (df===null?'–':(df>0?'+':'')+df.toFixed(1))+'</td></tr>';});
+  h+='</tbody></table></div>'+
+    '<div class="note"><b>วิธีได้มาซึ่งค่า:</b> พารามิเตอร์ของ MIRT และ Deep-IRT ประมาณจากชุดข้อมูลที่สุ่มปิดบังเซลล์ '+
+    (S.nn.frac*100).toFixed(0)+'% ส่วนค่าความสามารถรายบุคคลในตารางนี้ให้คะแนนจากคำตอบครบทุกข้อของผู้เข้าสอบ · '+
+    'MIRT รายงานค่าคาดหมายภายหลัง (EAP) พร้อมความคลาดเคลื่อนมาตรฐาน ส่วน Deep-IRT รายงานค่าเฉลี่ยภายหลัง (μ) '+
+    'และส่วนเบี่ยงเบนภายหลัง (σ) จาก encoder<br>'+
+    '<b>ข้อจำกัดที่ต้องระบุ:</b> (1) แกนแฝงของ Deep-IRT ถูกปรับทิศให้ตรงกับ MIRT แล้ว '+
+    'แต่มาตรวัดยังไม่เท่ากันเสียทีเดียว จึงควรเทียบลำดับความเข้ม–อ่อนระหว่างมิติมากกว่าเทียบตัวเลขตรง ๆ · '+
+    '(2) ค่า μ ของ Deep-IRT มีการหดเข้าหาศูนย์ตามธรรมชาติของการอนุมานเชิงแปรผัน Scale Score จึงมักกระจายแคบกว่า MIRT · '+
+    '(3) ทั้งสองโมเดลใช้ Q-Matrix ชุดเดียวกัน มิติที่ Q ระบุว่าไม่ได้วัดในข้อใดจะถูกตรึงค่าน้ำหนักไว้ที่ 0</div>';
+  host.innerHTML=h;
+  requestAnimationFrame(function(){drawModelProfile('cvModelProf',i);});}
+
+function drawModelProfile(id,i){
+  var cv=document.getElementById(id);if(!cv)return;
+  var rows=nnAbilityRows(i),stu=S.students[i];if(!rows||!stu)return;
+  var dpr=window.devicePixelRatio||1,W=cv.clientWidth||900,H=300;
+  cv.width=W*dpr;cv.height=H*dpr;
+  var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  var pL=48,pR=16,pT=34,pB=52,iw=W-pL-pR,ih=H-pT-pB,lo=20,hi=80,K=rows.length;
+  var series=[{n:'IRT (รายมิติ)',c:'#6d4aff',v:rows.map(function(o,k){return SS.calc(stu.theta[k]);})},
+    {n:'MIRT',c:'#0b76c4',v:rows.map(function(o){return o.ssm;})},
+    {n:'Deep-IRT',c:'#0d8f86',v:rows.map(function(o){return o.ssd;})}];
+  x.font='11px Sarabun,sans-serif';
+  for(var t=0;t<=4;t++){var yy=pT+ih*t/4;
+    x.strokeStyle='#e6e8ef';x.lineWidth=1;
+    x.beginPath();x.moveTo(pL,yy);x.lineTo(W-pR,yy);x.stroke();
+    x.fillStyle='#6b7280';x.textAlign='right';
+    x.fillText(Math.round(hi-(hi-lo)*t/4),pL-7,yy+4);}
+  x.strokeStyle='#c4b5fd';x.setLineDash([5,4]);
+  var y50=pT+ih*(1-(50-lo)/(hi-lo));
+  x.beginPath();x.moveTo(pL,y50);x.lineTo(W-pR,y50);x.stroke();x.setLineDash([]);
+  var gw=iw/K,bw=Math.min((gw-14)/3,26);
+  rows.forEach(function(o,k){
+    var gx=pL+gw*k+(gw-bw*3)/2;
+    series.forEach(function(sr,si){
+      var v=sr.v[k];if(v===null||!isFinite(v))return;
+      var bh=ih*(v-lo)/(hi-lo),bx=gx+bw*si,by=pT+ih-bh;
+      x.fillStyle=sr.c;x.globalAlpha=.88;x.fillRect(bx,by,bw-3,bh);x.globalAlpha=1;
+      x.fillStyle='#111827';x.font='bold 10px Sarabun,sans-serif';x.textAlign='center';
+      x.fillText(v.toFixed(0),bx+(bw-3)/2,by-4);});
+    x.fillStyle='#3f4a5a';x.font='11px Sarabun,sans-serif';x.textAlign='center';
+    var nm=o.name.length>13?o.name.slice(0,12)+'…':o.name;
+    x.fillText(nm,pL+gw*k+gw/2,H-pB+18);});
+  var lx=pL;
+  series.forEach(function(sr){
+    x.fillStyle=sr.c;x.fillRect(lx,pT-24,11,11);
+    x.fillStyle='#3f4a5a';x.textAlign='left';x.font='bold 11px Sarabun,sans-serif';
+    x.fillText(sr.n,lx+16,pT-15);lx+=x.measureText(sr.n).width+46;});
+  x.fillStyle='#6b7280';x.font='10.5px Sarabun,sans-serif';x.textAlign='right';
+  x.fillText('Scale Score (50 + 10θ) · เส้นประ = ค่าเฉลี่ยอ้างอิง 50',W-pR,H-8);}
+
 function printReport(){
   var stu=curStu();if(!stu){alert('กรุณาวิเคราะห์ข้อมูลก่อน');return;}
   var i=+document.getElementById('stuSel').value,mg=S.gd?S.gd.marg[i]:null,rows='';
@@ -2615,7 +2704,7 @@ function printReport(){
    '.hd{border-bottom:2px solid #7c3aed;padding-bottom:8px;margin-bottom:12px}'+
    '.rpt{width:100%;border-collapse:collapse;margin:7px 0;font-size:11.5px}'+
    '.rpt th,.rpt td{border:1px solid #cbd5e1;padding:5px;text-align:center}'+
-   '.rpt th{background:#ede9fe}.rpt td.l{text-align:left;font-weight:700}'+
+   '.rpt th{background:#ede9fe;font-size:10.5px}.rpt td.l{text-align:left;font-weight:700}'+
    '.rpt td.ss{font-weight:800;font-size:13px;color:#7c3aed}'+
    '.rpt tr.sum{background:#f1f5f9;font-weight:800}'+
    '.note{font-size:10.5px;color:#475569;margin-top:4px;line-height:1.55}'+
@@ -2623,6 +2712,35 @@ function printReport(){
    '.sig{margin-top:40px;text-align:right;font-size:12px}'+
    'footer{margin-top:24px;border-top:1px solid #cbd5e1;padding-top:8px;text-align:center;font-size:10.5px;color:#64748b}'+
    '@media print{.rpt{page-break-inside:avoid}}';
+  var nnR=nnAbilityRows(i),nnBlock='';
+  if(nnR){
+    var nr='';
+    nnR.forEach(function(o){
+      nr+='<tr><td class="l">'+o.name+'</td>'+
+        '<td>'+(isFinite(o.tm)?o.tm.toFixed(3):'–')+'</td>'+
+        '<td>'+(isFinite(o.sm)?o.sm.toFixed(3):'–')+'</td>'+
+        '<td class="ss">'+SS.fmt(o.tm)+'</td>'+
+        '<td>'+(o.cim?o.cim[0].toFixed(1)+'–'+o.cim[1].toFixed(1):'–')+'</td>'+
+        '<td>'+o.bm.label+'</td>'+
+        '<td>'+(isFinite(o.td)?o.td.toFixed(3):'–')+'</td>'+
+        '<td>'+(isFinite(o.sd)?o.sd.toFixed(3):'–')+'</td>'+
+        '<td class="ss">'+SS.fmt(o.td)+'</td>'+
+        '<td>'+o.bd.label+'</td></tr>';});
+    var bestNN=S.nn.models.filter(function(o){return o.key!=='BASE';})
+      .sort(function(a,b){return (b.ev.auc||0)-(a.ev.auc||0);})[0];
+    nnBlock='<h3>ตารางที่ 3 มิติความสามารถจากโมเดลหลายมิติ (MIRT) และ Deep-IRT</h3>'+
+      '<table class="rpt"><thead><tr><th rowspan="2">มิติความสามารถ</th>'+
+      '<th colspan="5">MIRT (Confirmatory M2PL)</th>'+
+      '<th colspan="4">Deep-IRT (VAE-IRT)</th></tr>'+
+      '<tr><th>θ</th><th>SE</th><th>Scale Score</th><th>95% CI</th><th>ระดับ</th>'+
+      '<th>θ (μ)</th><th>σ</th><th>Scale Score</th><th>ระดับ</th></tr></thead><tbody>'+nr+'</tbody></table>'+
+      '<p class="note">พารามิเตอร์ของทั้งสองโมเดลประมาณจากชุดข้อมูลที่สุ่มปิดบังเซลล์ '+
+      (S.nn.frac*100).toFixed(0)+'% ส่วนค่าความสามารถรายบุคคลให้คะแนนจากคำตอบครบทุกข้อ · '+
+      'ความแม่นยำในการทำนายเซลล์ที่กันไว้: '+
+      S.nn.models.map(function(o){return o.key+' AUC = '+(isFinite(o.ev.auc)?o.ev.auc.toFixed(3):'–');}).join(' · ')+
+      ' (โมเดลที่ทำนายได้ดีที่สุดคือ '+bestNN.key+') · '+
+      'แกนแฝงของ Deep-IRT ปรับทิศให้ตรงกับ MIRT แล้ว แต่มาตรวัดไม่เท่ากันเสียทีเดียว '+
+      'จึงควรเทียบลำดับความเข้ม–อ่อนระหว่างมิติมากกว่าเทียบตัวเลขโดยตรง</p>';}
   var m2Line=(S.m2&&!S.m2.err)?('<tr><td class="l">ความกลมกลืนสัมบูรณ์</td><td>M₂('+S.m2.df+') = '+
     S.m2.M2.toFixed(2)+' · p = '+(S.m2.p<.0001?'&lt;.0001':S.m2.p.toFixed(4))+'</td>'+
     '<td class="l">RMSEA₂ (90% CI)</td><td>'+S.m2.rmsea.toFixed(4)+' ['+S.m2.lo.toFixed(4)+', '+
@@ -2654,6 +2772,7 @@ function printReport(){
    '<td>'+(isFinite(stu.gTheta)?stu.gTheta.toFixed(3):'–')+'</td><td class="ss">'+SS.fmt(stu.gTheta)+'</td>'+
    '<td>'+(cg?cg[0].toFixed(1)+'–'+cg[1].toFixed(1):'–')+'</td><td>'+SS.band(stu.gTheta).label+'</td>'+
    '<td>–</td>'+(mg?'<td>–</td><td class="mono">['+S.gd.map[i].join('')+']</td>':'')+'<td>–</td></tr></tbody></table>'+
+   nnBlock+
    '<p class="note">หมายเหตุ: Scale Score = 50 + 10θ (M = 50, SD = 10) ปรับช่วง 20–80 คะแนน · '+
    (S.m2&&!S.m2.err&&S.m2.rmsea>.08?'<b>คำเตือน:</b> RMSEA₂ = '+S.m2.rmsea.toFixed(3)+
      ' สูงกว่าเกณฑ์ .08 โมเดลยังกลมกลืนกับข้อมูลไม่ดีพอ ควรตีความผลด้วยความระมัดระวัง'
@@ -3157,14 +3276,11 @@ function startNeural(done){
     for(var j=0;j<J;j++){var n=0,c=0;
       for(i=0;i<N;i++){var v=mk.Xtrain[i][j];if(v===null)continue;n++;if(v===1)c++;}
       base[j]=clamp(n?c/n:.5,1e-4,1-1e-4);}
-    var thM=[],thD=[];
-    for(i=0;i<N;i++){thM.push(null);thD.push(null);}
     for(var rk in byRow){
       var ri=+rk,row=mk.Xtrain[ri];
-      var post=mirtPost(Mo,row),tm=mirtTheta(Mo,post);
+      var post=mirtPost(Mo,row);
       var dp=deepPredictRow(Do,deepInputRow(J,row),24);
       var gpost=Gtr?gdinaPostRow(Gtr,row):null;
-      thM[ri]=tm.th;thD[ri]=dp.mu;
       byRow[rk].forEach(function(hi){
         var cell=mk.held[hi],jj=cell[1],y=cell[2];
         yy.push(y);
@@ -3183,14 +3299,25 @@ function startNeural(done){
     models.push({key:'BASE',label:'Baseline (สัดส่วนตอบถูกรายข้อ)',est:'ไม่มีตัวแปรแฝง',
       npar:J,ll:NaN,aic:NaN,bic:NaN,ev:evalCells(pB,yy),roc:rocCurve(pB,yy),color:'#94a3b8'});
 
-    var corr=[];
-    for(var k=0;k<K;k++){
+    /* ---- ประมาณมิติความสามารถรายบุคคลจากข้อมูลตอบสนองครบทุกข้อ (สำหรับรายงานรายบุคคล) ---- */
+    prog('🧬 Deep-IRT vs MIRT','กำลังประมาณมิติความสามารถรายบุคคลจากทั้งสองโมเดล',98);
+    var perM=[],perD=[],k;
+    for(i=0;i<N;i++){
+      var pf=mirtPost(Mo,S.X[i]),tf=mirtTheta(Mo,pf);
+      var df=deepPredictRow(Do,deepInputRow(J,S.X[i]),24);
+      perM.push({th:tf.th,se:tf.se});perD.push({mu:df.mu,sd:df.sd});}
+    /* ---- ปรับทิศของแกนแฝง Deep-IRT ให้ตรงกับ MIRT (sign indeterminacy) ---- */
+    var corr=[],flip=[];
+    for(k=0;k<K;k++){
       var a=[],b=[];
-      for(i=0;i<N;i++){if(!thM[i]||!thD[i])continue;a.push(thM[i][k]);b.push(thD[i][k]);}
-      corr.push({k:k,r:pearson(a,b),n:a.length});}
+      for(i=0;i<N;i++){a.push(perM[i].th[k]);b.push(perD[i].mu[k]);}
+      var rr=pearson(a,b),fp=(isFinite(rr)&&rr<0);
+      corr.push({k:k,r:rr,n:N,flip:fp});flip.push(fp);}
+    for(k=0;k<K;k++)if(flip[k])for(i=0;i<N;i++)perD[i].mu[k]=-perD[i].mu[k];
 
     S.nn={frac:frac,held:mk.held.length,nTot:mk.nTot,models:models,y:yy,
-      mirt:Mo,deep:Do,gdina:Gtr,corr:corr,thM:thM,thD:thD,
+      mirt:Mo,deep:Do,gdina:Gtr,corr:corr,flip:flip,
+      theta:{mirt:perM,deep:perD},
       sec:((performance.now()-t0)/1000).toFixed(1)};
     prog('','',0,false);renderNeural();if(done)done();}}
 
@@ -3243,12 +3370,13 @@ function renderNeural(){
 
   h+='<h4>ความสอดคล้องของค่าประมาณความสามารถแฝง θ ระหว่าง MIRT กับ Deep-IRT</h4>'+
     '<table><thead><tr><th style="text-align:left">มิติความสามารถ</th><th>n</th>'+
-    '<th>สหสัมพันธ์ r</th><th>การแปลผล</th></tr></thead><tbody>';
+    '<th>สหสัมพันธ์ r</th><th>ปรับทิศแกน</th><th>การแปลผล</th></tr></thead><tbody>';
   R.corr.forEach(function(o){
     var r=o.r,lab=!isFinite(r)?'ไม่พอข้อมูล':(Math.abs(r)>=.8?'สอดคล้องสูง':(Math.abs(r)>=.5?'สอดคล้องปานกลาง':'สอดคล้องต่ำ'));
     var tg=!isFinite(r)?'t-wn':(Math.abs(r)>=.8?'t-ok':(Math.abs(r)>=.5?'t-bl':'t-er'));
     h+='<tr><td style="text-align:left;font-weight:700">'+S.attrNames[o.k]+'</td><td>'+o.n+'</td>'+
       '<td style="font-weight:800">'+(isFinite(r)?r.toFixed(3):'–')+'</td>'+
+      '<td class="se">'+(o.flip?'กลับทิศแล้ว':'ไม่ต้องปรับ')+'</td>'+
       '<td><span class="tag '+tg+'">'+lab+'</span></td></tr>';});
   h+='</tbody></table>'+
     '<div class="note">คำนวณจากผู้เข้าสอบที่มีเซลล์ถูกกันไว้ทดสอบ โดยเทียบ EAP ของ MIRT กับค่าเฉลี่ยหลัง (μ) '+
@@ -3407,20 +3535,6 @@ window.addEventListener('error',function(ev){
       '<br>แนะนำให้ลดจำนวนมิติ จำนวนรอบ Bootstrap หรือจำนวน fold แล้วเริ่มวิเคราะห์ใหม่','er');
   }catch(e){}});
 cvModeUI();initDrop();
-</script>
-      <script language=JavaScript>
-<!--
-var message="Do not click right..!! (อย่าคลิ๊กขวา..!!)";
-///////////////////////////////////
-function clickIE() {if (document.all) {alert(message);return false;}}
-function clickNS(e) {if 
-(document.layers||(document.getElementById&&!document.all)) {
-if (e.which==2||e.which==3) {alert(message);return false;}}}
-if (document.layers) 
-{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;}
-else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;}
-document.oncontextmenu=new Function("return false")
-// --> 
 </script>
 </body>
 </html>
